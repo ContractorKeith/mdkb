@@ -20,7 +20,7 @@ func ExtractLinks(body string) []LinkRef {
 		lineOffset := offset
 		offset += len(line) + 1
 		trimmed := strings.TrimSpace(line)
-		if inline == 0 && (strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~")) {
+		if inline == 0 && fenceLine(trimmed) {
 			if fence == 0 {
 				fence = trimmed[0]
 			} else if fence == trimmed[0] {

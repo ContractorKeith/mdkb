@@ -17,6 +17,7 @@ func TestExtractLinks(t *testing.T) {
 			{"plain#Section", "plain", "Section", "", 0, 0, true, 1}, {"plain#Section|display", "plain", "Section", "display", 0, 0, true, 1},
 		}},
 		{"fences", "```md\n[[no]]\n~~~\n[[no]]\n```\n~~~md\n[[no]]\n~~~\n[[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 9}}},
+		{"inline triple at line start", "```[[ignore]]``` [[welcome]]\n[[welcome]]", []LinkRef{{"welcome", "welcome", "", "", 0, 0, false, 1}, {"welcome", "welcome", "", "", 0, 0, false, 2}}},
 		{"inline", "`[[no]]` ``a ` ![[no]]`` [[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 1}}},
 		{"multiline inline", "`start\n[[no]]`\n[[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 3}}},
 		{"unmatched tick", "` [[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 1}}},

@@ -66,7 +66,7 @@ func Parse(path string, raw []byte) (Note, error) {
 		fence := byte(0)
 		for _, line := range strings.Split(n.Body, "\n") {
 			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "```") || strings.HasPrefix(line, "~~~") {
+			if fenceLine(line) {
 				if fence == 0 {
 					fence = line[0]
 				} else if fence == line[0] {
