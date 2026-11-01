@@ -58,8 +58,9 @@ To enable them, append `--allow-write` after `mcp` in either client configuratio
 
 Optional frontmatter accepts `title`, `tags` and `aliases` for create or overwrite;
 append refuses frontmatter. YAML is serialized safely. Omitted frontmatter leaves
-the supplied body unchanged. `bytes` is the resulting file size; `path` is relative
-to the root and includes `.md`.
+the supplied body unchanged apart from adding a missing final newline. All write
+modes, including capture, ensure the file ends with a newline. `bytes` is the
+resulting file size; `path` is relative to the root and includes `.md`.
 
 Writes stage a complete temp file in the same directory. Append and overwrite
 publish with rename; create uses an atomic hard link to refuse concurrent creates

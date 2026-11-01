@@ -110,6 +110,9 @@ func write(root, id, content, mode string) (WriteResult, error) {
 		}
 		content = string(raw) + separator + content
 	}
+	if !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
 	temp := fmt.Sprintf(".mdkb-%x.tmp", randomBytes())
 	f, err := dir.OpenFile(temp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {

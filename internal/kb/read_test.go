@@ -1,6 +1,7 @@
 package kb_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,6 +32,12 @@ func TestReadDirect(t *testing.T) {
 	for _, id := range []string{"nested/./note", "../outside", "nested/../nested/note", filepath.Join(root, "nested/note"), "link", "linked-dir/note", ".hidden/note"} {
 		if _, got, err := kb.Read(root, id); err == nil || got != "" {
 			t.Fatalf("read %q: %q %v", id, got, err)
+		}
+	}
+	for _, id := range []string{"nope", "missing/child"} {
+		_, _, err := kb.Read(root, id)
+		if !errors.Is(err, os.ErrNotExist) || err.Error() != "note not found: "+id {
+			t.Fatalf("%q: %v", id, err)
 		}
 	}
 	linkRoot := filepath.Join(t.TempDir(), "root")

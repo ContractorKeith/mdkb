@@ -154,8 +154,13 @@ func TestToolsAndGoldens(t *testing.T) {
 		info["root"], info["index_path"] = "<root>", "<index>"
 		golden(t, "info", info)
 		for _, name := range []string{"read_note", "get_links", "get_backlinks"} {
-			if !call(t, cs, name, map[string]any{"id": "unknown-note"}).IsError {
-				t.Fatalf("%s accepted missing ID", name)
+			result := call(t, cs, name, map[string]any{"id": "unknown-note"})
+			if !result.IsError || len(result.Content) != 1 {
+				t.Fatalf("%s: %+v", name, result)
+			}
+			text, ok := result.Content[0].(*mcp.TextContent)
+			if !ok || text.Text != "note not found: unknown-note" {
+				t.Fatalf("%s: %+v", name, result.Content)
 			}
 		}
 		if !writes {

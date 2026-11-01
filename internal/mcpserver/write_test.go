@@ -18,9 +18,9 @@ func TestWrites(t *testing.T) {
 		return success(t, cs, "write_note", map[string]any{"id": id, "body": body, "mode": mode})
 	}
 	for _, tt := range []struct{ mode, body, want string }{
-		{"create", "firsttoken", "firsttoken"},
-		{"append", "secondtoken", "firsttoken\n\nsecondtoken"},
-		{"overwrite", "replacementtoken", "replacementtoken"},
+		{"create", "firsttoken", "firsttoken\n"},
+		{"append", "secondtoken", "firsttoken\n\nsecondtoken\n"},
+		{"overwrite", "replacementtoken", "replacementtoken\n"},
 	} {
 		got := decoded(t, write("nested/new", tt.body, tt.mode)).(map[string]any)
 		if got["id"] != "nested/new" || got["path"] != "nested/new.md" || got["bytes"] != float64(len(tt.want)) || got["mode"] != tt.mode {
@@ -76,7 +76,7 @@ func TestWrites(t *testing.T) {
 		t.Fatal(id)
 	}
 	n, _, err = kb.Read(root, id)
-	if err != nil || n.Created == "" || n.Title != "A Title!" || n.Body != "captureuniquetoken" {
+	if err != nil || n.Created == "" || n.Title != "A Title!" || n.Body != "captureuniquetoken\n" {
 		t.Fatalf("%+v %v", n, err)
 	}
 	hits := decoded(t, success(t, cs, "search_notes", map[string]any{"query": "captureuniquetoken"})).(map[string]any)["hits"].([]any)

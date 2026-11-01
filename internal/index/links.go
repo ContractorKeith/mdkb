@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"os"
 
 	"github.com/ContractorKeith/mdkb/internal/kb"
 )
@@ -39,7 +38,7 @@ func (i *Index) requireID(ctx context.Context, id string) error {
 		return Error(err)
 	}
 	if count == 0 {
-		return os.ErrNotExist
+		return kb.NoteNotFound(id)
 	}
 	return nil
 }
