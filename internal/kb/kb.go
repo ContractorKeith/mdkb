@@ -128,6 +128,14 @@ func Info(root string) (Details, error) {
 			return nil
 		}
 		if entry.Type().IsRegular() && filepath.Ext(entry.Name()) == ".md" {
+			rel, err := filepath.Rel(walkRoot, path)
+			if err != nil {
+				return err
+			}
+			if ValidateID(strings.TrimSuffix(filepath.ToSlash(rel), ".md"), false) != nil {
+				result.Problems++
+				return nil
+			}
 			result.NoteCount++
 			raw, err := os.ReadFile(path)
 			if err != nil {

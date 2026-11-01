@@ -8,7 +8,7 @@ import (
 
 // PreviewWrite validates a proposed write without creating directories or files.
 func PreviewWrite(root, id, mode string) error {
-	if !validID(id) {
+	if ValidateID(id, true) != nil {
 		return refuse(errors.New("invalid note id: " + id))
 	}
 	ok, err := hasMarker(root)
@@ -49,14 +49,6 @@ func PreviewWrite(root, id, mode string) error {
 				return refuse(os.ErrExist)
 			}
 		}
-	}
-	return nil
-}
-
-// ValidateID applies the write identifier contract without touching storage.
-func ValidateID(id string) error {
-	if !validID(id) {
-		return refuse(errors.New("invalid note id: " + id))
 	}
 	return nil
 }

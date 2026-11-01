@@ -16,7 +16,7 @@ func Read(root, id string) (Note, string, error) {
 		}
 		return Note{}, "", err
 	}
-	if !validID(id) {
+	if ValidateID(id, false) != nil {
 		return refused()
 	}
 	clean := filepath.Clean(filepath.FromSlash(id))

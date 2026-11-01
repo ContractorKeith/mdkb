@@ -39,6 +39,9 @@ func Walk(root string) ([]Note, error) {
 		if err != nil {
 			return err
 		}
+		if ValidateID(strings.TrimSuffix(filepath.ToSlash(rel), ".md"), false) != nil {
+			return nil
+		}
 		note, err := Parse(rel, raw)
 		if err != nil {
 			return err

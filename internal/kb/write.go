@@ -5,24 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 )
 
 var writeMu sync.Mutex
-
-func validID(id string) bool {
-	if id == "" || filepath.IsAbs(id) || strings.ContainsAny(id, "\\\x00") || strings.Contains(id, "..") {
-		return false
-	}
-	for _, part := range strings.Split(id, "/") {
-		if part == "" || strings.HasPrefix(part, ".") {
-			return false
-		}
-	}
-	return !strings.HasSuffix(id, ".md")
-}
 
 type WriteResult struct {
 	Commit      bool   `json:"commit" jsonschema:"Whether the write committed successfully"`
@@ -46,7 +33,7 @@ func Write(root, id, content, mode string) (WriteResult, error) {
 }
 
 func write(root, id, content, mode string) (WriteResult, error) {
-	if !validID(id) {
+	if ValidateID(id, true) != nil {
 		return WriteResult{}, fmt.Errorf("invalid note id: %q", id)
 	}
 	if mode != "create" && mode != "append" && mode != "overwrite" {

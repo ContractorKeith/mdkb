@@ -29,7 +29,7 @@ type MoveChange struct{ ID, Before, After string }
 // PlanMove validates every affected path before any mutation.
 func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
 	plan := MovePlan{Result: MoveResult{Old: old, New: new, Rewritten: []Rewritten{}}}
-	if !validID(old) || !validID(new) {
+	if ValidateID(old, false) != nil || ValidateID(new, true) != nil {
 		return plan, refuse(fmt.Errorf("invalid note id"))
 	}
 	if err := PreviewWrite(root, old, "overwrite"); err != nil {
