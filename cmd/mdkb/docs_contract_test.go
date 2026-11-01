@@ -12,7 +12,7 @@ func TestInstallAndProtocolDocs(t *testing.T) {
 		"docs/mcp.md":                         {"-32602", "unregistered", "isError", "malformed JSON", "restarts"},
 		"docs/json.md":                        {"HTML comments", "known limitation"},
 		"packaging/homebrew/mdkb.rb":          {"# frozen_string_literal: true", "# Local-first Markdown knowledge base."},
-		"AGENTS.md":                           {"Skeptic round 1 fixed", "tag pending"},
+		"AGENTS.md":                           {"v0.1.0", "#15–#23"},
 		".agents/skills/skeptic-env/SKILL.md": {"2026-11-01", "3c582fc", "worklog/reports/mdkb-review-2026-11-01.md", "#15–#23"},
 	} {
 		raw, err := os.ReadFile("../../" + file)
