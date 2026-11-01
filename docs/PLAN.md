@@ -164,5 +164,5 @@ This project exists to tune the workflow as much as to ship the tool.
 - **Before tag**: `skeptic-review` on main; one labelled issue per confirmed bug.
 - **After each session**: `log-work`. Skill gaps found go back to dotfiles, not patched here.
 - **Tracking**: GitHub milestones M0–M6 and one issue each are the truth. The Basecamp
-  "ContractorKeith Global" card table mirrors milestone state across all repos for the
+  "github" project card table (all personal repos share it) mirrors milestone state across all repos for the
   what's-next view; a card moves when a PR merges.
