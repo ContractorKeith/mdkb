@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/ContractorKeith/mdkb/internal/config"
 )
 
 func inGit(root string) bool {
@@ -26,12 +24,8 @@ func initGit(root string) error {
 }
 
 // CommitWrite stages and commits only the supplied root-relative paths.
-func CommitWrite(root string, paths []string, message string) error {
-	cfg, err := config.Writes()
-	if err != nil {
-		return err
-	}
-	if !cfg.CommitOnWrite || !inGit(root) || len(paths) == 0 {
+func CommitWrite(root string, paths []string, message string, commitOnWrite bool) error {
+	if !commitOnWrite || !inGit(root) || len(paths) == 0 {
 		return nil
 	}
 
@@ -70,13 +64,13 @@ func CommitWrite(root string, paths []string, message string) error {
 }
 
 // CommitWriteStatus reports whether CommitWrite actually advanced HEAD.
-func CommitWriteStatus(root string, paths []string, message string) (bool, error) {
+func CommitWriteStatus(root string, paths []string, message string, commitOnWrite bool) (bool, error) {
 	revision := func() string {
 		out, _ := exec.Command("git", "-C", root, "rev-parse", "--verify", "HEAD").Output()
 		return string(out)
 	}
 	before := revision()
-	if err := CommitWrite(root, paths, message); err != nil {
+	if err := CommitWrite(root, paths, message, commitOnWrite); err != nil {
 		return false, err
 	}
 	return revision() != before, nil

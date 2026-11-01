@@ -67,7 +67,7 @@ func Move(ctx context.Context, idx *index.Index, root, old, new string, dry bool
 		}
 	}
 	message := fmt.Sprintf("mdkb: mv %s -> %s (%d links rewritten)", old, new, plan.Result.Total)
-	committed, commitErr := kb.CommitWriteStatus(root, paths, message)
+	committed, commitErr := commitWrite(root, paths, message)
 	plan.Result.Commit = committed
 	if err := commitErr; err != nil {
 		plan.Result.Commit = false

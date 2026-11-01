@@ -53,7 +53,7 @@ func fixture(t *testing.T) string {
 
 func client(t *testing.T, root string, writes bool) *mcp.ClientSession {
 	t.Helper()
-	server, err := mcpserver.New(root, writes)
+	server, err := mcpserver.New(root, writes, "v0.0.0-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,6 +68,9 @@ func client(t *testing.T, root string, writes bool) *mcp.ClientSession {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { cs.Close() })
+	if got := cs.InitializeResult().ServerInfo.Version; got != "v0.0.0-test" {
+		t.Fatalf("server version: %q", got)
+	}
 	return cs
 }
 

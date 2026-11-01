@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE
 CREATE TABLE IF NOT EXISTS link_sources (note_id TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS links (from_id TEXT, target_raw TEXT, target_id TEXT NULL, kind TEXT, heading TEXT, alias TEXT, line INTEGER);
 CREATE INDEX IF NOT EXISTS links_target ON links(target_id);
+CREATE INDEX IF NOT EXISTS links_raw ON links(target_raw);
+CREATE INDEX IF NOT EXISTS links_source ON links(from_id);
 CREATE TABLE IF NOT EXISTS tags (note_id TEXT NOT NULL, name TEXT NOT NULL, PRIMARY KEY(note_id,name));
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(title, body, content='notes', content_rowid='rowid');
 CREATE TRIGGER IF NOT EXISTS embedding_delete AFTER DELETE ON notes BEGIN DELETE FROM embeddings WHERE note_id=old.id; DELETE FROM embedding_state WHERE note_id=old.id; END;

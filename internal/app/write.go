@@ -23,7 +23,7 @@ func Write(ctx context.Context, idx *index.Index, root, id, content, mode, verb 
 	if verb == "create" {
 		verb = "new"
 	}
-	committed, commitErr := kb.CommitWriteStatus(root, []string{result.Path}, "mdkb: "+verb+" "+id)
+	committed, commitErr := commitWrite(root, []string{result.Path}, "mdkb: "+verb+" "+id)
 	result.Commit = committed
 	if err := commitErr; err != nil {
 		result.Commit = false

@@ -1,0 +1,36 @@
+class Mdkb < Formula
+  desc "Local-first Markdown knowledge base with CLI and MCP server"
+  homepage "https://github.com/ContractorKeith/mdkb"
+  version "0.1.0"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/ContractorKeith/mdkb/releases/download/v#{version}/mdkb_v#{version}_darwin_arm64.tar.gz"
+      sha256 "REPLACE_AFTER_RELEASE" # darwin_arm64
+    end
+    on_intel do
+      url "https://github.com/ContractorKeith/mdkb/releases/download/v#{version}/mdkb_v#{version}_darwin_amd64.tar.gz"
+      sha256 "REPLACE_AFTER_RELEASE" # darwin_amd64
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/ContractorKeith/mdkb/releases/download/v#{version}/mdkb_v#{version}_linux_arm64.tar.gz"
+      sha256 "REPLACE_AFTER_RELEASE" # linux_arm64
+    end
+    on_intel do
+      url "https://github.com/ContractorKeith/mdkb/releases/download/v#{version}/mdkb_v#{version}_linux_amd64.tar.gz"
+      sha256 "REPLACE_AFTER_RELEASE" # linux_amd64
+    end
+  end
+
+  def install
+    bin.install "mdkb"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/mdkb version")
+  end
+end
