@@ -23,7 +23,7 @@ func TestWrites(t *testing.T) {
 		{"overwrite", "replacementtoken", "replacementtoken\n"},
 	} {
 		got := decoded(t, write("nested/new", tt.body, tt.mode)).(map[string]any)
-		if got["id"] != "nested/new" || got["path"] != "nested/new.md" || got["bytes"] != float64(len(tt.want)) || got["mode"] != tt.mode {
+		if got["commit"] != true || got["id"] != "nested/new" || got["path"] != "nested/new.md" || got["bytes"] != float64(len(tt.want)) || got["mode"] != tt.mode {
 			t.Fatal(got)
 		}
 		raw, err := os.ReadFile(filepath.Join(root, "nested/new.md"))

@@ -120,7 +120,64 @@ are capped at 50; non-positive limits are errors. Unknown IDs and refused writes
 return `isError:true` tool results.
 
 Both `write_note` and `capture` return
-`{"id":"00-Inbox/example","path":"00-Inbox/example.md","bytes":42,"mode":"create"}`.
+`{"id":"00-Inbox/example","path":"00-Inbox/example.md","bytes":42,"mode":"create","commit":true}`.
 Path is relative to the root; bytes counts the entire resulting file.
 Modes are create, append and overwrite; capture always uses create.
 Neither write tool is registered without `--allow-write`.
+
+## M4 write commands
+
+All write IDs follow the MCP identifier rules. Refused writes (including invalid
+IDs and uninitialized roots) exit 5; a missing source for `mv` exits 2.
+`--json` produces one object on stdout; previews and commit diagnostics use stderr.
+
+- `new <title> [--body TEXT | --stdin] [--tags a,b] [--dir DIR]`:
+  `{"id":"meeting-notes","path":"meeting-notes.md","bytes":90,"mode":"create","commit":true}`.
+  The ID uses the capture slug rules (Unicode letters/digits, lowercase, dashes,
+  at most 40 characters, fallback `note`). Default directory is the root.
+  Frontmatter includes title, optional tags and created (YYYY-MM-DD).
+- `capture [--title T] [TEXT... | --stdin]`: the same WriteResult shape;
+  creates `00-Inbox/YYYY-MM-DD-HHMMSS-slug.md` with the shared MCP capture rules.
+- `daily [--append TEXT | --stdin] [--date YYYY-MM-DD]`: creates
+  `10-Daily/YYYY-MM-DD.md` with created frontmatter and a date heading, or
+  appends with a blank line. Creation/appending returns WriteResult; opening
+  an existing note without text returns
+  `{"id":"10-Daily/2026-11-01","path":"10-Daily/2026-11-01.md"}` without a write.
+- `new`, `capture`, and writing `daily` accept `--dry-run`, returning
+  `{"id":"meeting-notes","path":"meeting-notes.md","dry_run":true}`
+  and the proposed complete content on stderr. They create no files/directories.
+- `mv <old> <new>`:
+  `{"old":"plain","new":"renamed/plain","rewritten":[{"id":"welcome","count":1}],"total":1,"commit":true}`.
+  Rewritten entries count occurrences by original source ID. The actual fixture
+  rewrites four occurrences across four sources. Existing destinations are refused.
+  `--dry-run` adds `"dry_run":true`, sets commit:false and emits whole-file
+  unified diffs on stderr, including the moved file. It writes no notes.
+  Exact IDs (including `.md` spellings) become the new extensionless ID.
+  A basename spelling remains only if it still resolves unambiguously to the
+  moved note after the move; otherwise it becomes the new exact ID. Frontmatter
+  aliases remain when they still resolve. Heading/display suffixes and embeds
+  are preserved; links inside fenced or matched inline code are untouched.
+
+### Write configuration and commits
+
+User config is `~/.config/mdkb/config.toml`:
+
+```toml
+[write]
+commit_on_write = true
+daily_dir = "10-Daily"
+```
+
+`MDKB_COMMIT_ON_WRITE=0` or `1` overrides the boolean. A write inside a git work
+tree stages and commits only its affected paths, once for the complete operation.
+Messages use `mdkb: new <id>`, `mdkb: append <id>`,
+`mdkb: overwrite <id>`, `mdkb: capture <id>`, `mdkb: daily <id>`, or
+`mdkb: mv <old> -> <new> (N links rewritten)`.
+If no git email is configured, the commit uses mdkb / mdkb@local for that command.
+
+`commit` is true only when HEAD advanced. Disabled commits, non-repositories,
+identical overwrites and changes restoring the committed content return false.
+Commit failure preserves the write, prints a diagnostic to stderr, returns
+commit:false and exits 0. Reindex failures remain errors after the file write.
+The application layer owns reindex/commit orchestration to avoid a kb/index
+dependency cycle; low-level `kb.Write` handles atomic file publication.

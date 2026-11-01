@@ -1,4 +1,4 @@
-package mcpserver
+package kb
 
 import (
 	"strings"
@@ -12,7 +12,7 @@ func TestSlug(t *testing.T) {
 		{strings.Repeat("A", 80), strings.Repeat("a", 40)},
 		{"  Héllo World  ", "héllo-world"},
 	} {
-		if got := slug(tt.in); got != tt.want {
+		if got := Slug(tt.in); got != tt.want {
 			t.Fatalf("%q: %q != %q", tt.in, got, tt.want)
 		}
 	}

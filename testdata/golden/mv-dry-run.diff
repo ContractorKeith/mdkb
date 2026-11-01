@@ -1,0 +1,79 @@
+--- a/plain.md
++++ b/renamed/plain.md
+@@ -1,2 +1,2 @@
+-Just a note without frontmatter or headings.
+-[[headings#Second section]]
++Just a note without frontmatter or headings.
++[[headings#Second section]]
+--- a/code-fences.md
++++ b/code-fences.md
+@@ -1,14 +1,14 @@
+-# Code examples
+-
+-```md
+-[[fenced-missing]]
+-![[also-fenced-missing]]
+-```
+-
+-~~~markdown
+-[[tilde-fenced-missing]]
+-~~~
+-
+-[[plain]] is a real link outside the fences.
+-
+-`[[inline-missing]]` and ``![[inline-embed-missing]]`` are code.
++# Code examples
++
++```md
++[[fenced-missing]]
++![[also-fenced-missing]]
++```
++
++~~~markdown
++[[tilde-fenced-missing]]
++~~~
++
++[[renamed/plain]] is a real link outside the fences.
++
++`[[inline-missing]]` and ``![[inline-embed-missing]]`` are code.
+--- a/embed-source.md
++++ b/embed-source.md
+@@ -1,3 +1,3 @@
+-# Embedded note
+-![[plain]]
+-![[headings#Second section]]
++# Embedded note
++![[renamed/plain]]
++![[headings#Second section]]
+--- a/empty-frontmatter.md
++++ b/empty-frontmatter.md
+@@ -1,4 +1,4 @@
+----
+----
+-# Empty metadata
+-[[plain]]
++---
++---
++# Empty metadata
++[[renamed/plain]]
+--- a/welcome.md
++++ b/welcome.md
+@@ -1,9 +1,9 @@
+----
+-title: Welcome to the awkward KB
+-tags: [start, reference]
+-aliases: [Home, Start Here]
+-created: 2026-10-01
+-updated: 2026-11-01
+----
+-# Welcome
+-[[plain]] and [[alias-source]] begin the tour.
++---
++title: Welcome to the awkward KB
++tags: [start, reference]
++aliases: [Home, Start Here]
++created: 2026-10-01
++updated: 2026-11-01
++---
++# Welcome
++[[renamed/plain]] and [[alias-source]] begin the tour.

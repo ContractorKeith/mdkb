@@ -33,8 +33,8 @@ See the [official Codex MCP configuration documentation](https://learn.chatgpt.c
 | `get_links` | `{id}` | `links`: all outgoing occurrences in body order |
 | `get_backlinks` | `{id}` | `backlinks`: all incoming occurrences in source order |
 | `get_info` | `{}` | `info`: root, cache path, note and graph totals |
-| `write_note` | `{id, body, mode, frontmatter?}` | id, path, bytes, mode |
-| `capture` | `{text, title?}` | id, path, bytes, mode |
+| `write_note` | `{id, body, mode, frontmatter?}` | id, path, bytes, mode, commit |
+| `capture` | `{text, title?}` | id, path, bytes, mode, commit |
 
 Read outputs use the [CLI JSON contracts](json.md). Empty collections are arrays.
 Limits default to 50, must be positive, and are capped at 50. Every call syncs
@@ -74,4 +74,9 @@ words of text, lowercase letters/digits and dashes, capped at 40 characters
 (fallback: `note`). A same-second ID collision returns an error without replacing
 the existing capture.
 
-M3 does not create git commits. CLI write commands and git commits arrive in M4.
+Both write tools use the shared CLI write path and create one git commit when
+enabled and inside a repository. `commit` is true only when HEAD advances;
+disabled commits, non-repositories and unchanged content return false.
+A git failure preserves the write and returns a successful tool result with
+`commit:false`, with a diagnostic on server stderr. See [write configuration](json.md#write-configuration-and-commits).
+Create messages use `mdkb: new <id>`; capture messages use `mdkb: capture <id>`.
