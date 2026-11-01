@@ -5,29 +5,36 @@ import (
 	"strings"
 )
 
-// RewriteLinks changes only scanned targets resolved to old, preserving suffixes.
-// A basename survives only when its existing spelling still resolves to new.
+// RewriteLinks preserves resolved destinations across a move, retaining link suffixes.
 func RewriteLinks(body, old, new string, before, after []Note) (string, int) {
+	return rewriteLinks(body, CanonicalID(old), CanonicalID(new), NewResolver(before), NewResolver(after))
+}
+
+func rewriteLinks(body, old, new string, before, after *Resolver) (string, int) {
 	refs := ExtractLinks(body)
 	count := 0
 	for i := len(refs) - 1; i >= 0; i-- {
 		ref := refs[i]
-		resolved, ok := Resolve(ref.Target, before)
-		if !ok || resolved != old {
+		resolved, reason := before.ResolveLink(ref.Target)
+		if reason != "" {
 			continue
 		}
-		exact := strings.TrimSuffix(ref.Target, ".md") == old
-		if !exact {
-			resolved, ok := Resolve(ref.Target, after)
-			if ok && resolved == new {
+		next, nextReason := after.ResolveLink(ref.Target)
+		replacement := resolved
+		if resolved == old {
+			replacement = new
+			exact := strings.TrimSuffix(ref.Target, ".md") == old || ref.Target == old
+			if !exact && nextReason == "" && next == new {
 				continue
 			}
+		} else if nextReason == "" && next == resolved {
+			continue
 		}
 		end := strings.IndexAny(ref.Raw, "#|")
 		if end < 0 {
 			end = len(ref.Raw)
 		}
-		body = body[:ref.Start] + new + ref.Raw[end:] + body[ref.End:]
+		body = body[:ref.Start] + replacement + ref.Raw[end:] + body[ref.End:]
 		count++
 	}
 	return body, count

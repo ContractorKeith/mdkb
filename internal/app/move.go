@@ -23,15 +23,7 @@ func Move(ctx context.Context, idx *index.Index, root, old, new string, dry bool
 		}
 		return kb.MoveResult{}, "", err
 	}
-	incoming, err := idx.Backlinks(ctx, old)
-	if err != nil {
-		return kb.MoveResult{}, "", err
-	}
-	sources := []string{}
-	for _, link := range incoming.Backlinks {
-		sources = append(sources, link.From)
-	}
-	plan, err := kb.PlanMove(root, old, new, sources)
+	plan, err := kb.PlanMove(root, old, new)
 	if err != nil {
 		return plan.Result, "", err
 	}

@@ -20,7 +20,7 @@ func TestMoveSelfLinkAndNoFinalNewline(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "old.md"), []byte("[[old#h|a]]"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	plan, err := PlanMove(root, "old", "nested/new", nil)
+	plan, err := PlanMove(root, "old", "nested/new")
 	if err != nil || plan.Result.Total != 1 {
 		t.Fatal(plan, err)
 	}
@@ -52,7 +52,7 @@ func TestMoveRefusesSymlink(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, pair := range [][2]string{{"linked", "new"}, {"old", "linked"}, {"old", "old"}, {"old", "../new"}} {
-		_, err := PlanMove(root, pair[0], pair[1], nil)
+		_, err := PlanMove(root, pair[0], pair[1])
 		if !errors.Is(err, ErrWriteRefused) {
 			t.Fatal(pair, err)
 		}

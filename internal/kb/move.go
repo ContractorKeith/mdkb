@@ -28,7 +28,7 @@ type MovePlan struct {
 type MoveChange struct{ ID, Path, Before, After string }
 
 // PlanMove validates every affected path before any mutation.
-func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
+func PlanMove(root, old, new string) (MovePlan, error) {
 	old, new = CanonicalID(old), CanonicalID(new)
 	plan := MovePlan{Result: MoveResult{Old: old, New: new, Rewritten: []Rewritten{}}}
 	if ValidateID(old, false) != nil || ValidateID(new, true) != nil {
@@ -62,19 +62,14 @@ func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
 			after[i].ID = new
 		}
 	}
-	// Include the moved note for self-links even if the caller omitted it.
-	seen := map[string]bool{}
-	sources = append(append([]string(nil), sources...), old)
-	for _, id := range sources {
-		if seen[id] {
-			continue
-		}
-		seen[id] = true
+	beforeResolver, afterResolver := NewResolver(notes), NewResolver(after)
+	for _, source := range notes {
+		id := source.ID
 		note, content, err := Read(root, id)
 		if err != nil {
 			return plan, err
 		}
-		body, count := RewriteLinks(note.Body, old, new, notes, after)
+		body, count := rewriteLinks(note.Body, old, new, beforeResolver, afterResolver)
 		if count == 0 {
 			continue
 		}
