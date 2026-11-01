@@ -7,7 +7,6 @@ import (
 	"github.com/ContractorKeith/mdkb/internal/app"
 	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
-	"github.com/ContractorKeith/mdkb/internal/search"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -19,7 +18,8 @@ type idInput struct {
 	ID string `json:"id" jsonschema:"Relative note path without .md using forward slashes"`
 }
 type searchInput struct {
-	Query string `json:"query" jsonschema:"FTS5 keyword query; malformed expressions retry as a literal phrase"`
+	Mode  string `json:"mode,omitempty" jsonschema:"Search mode: keyword, semantic, hybrid; omitted selects automatically"`
+	Query string `json:"query" jsonschema:"Search text; keyword mode accepts FTS5 syntax"`
 	Limit *int   `json:"limit,omitempty" jsonschema:"Positive result limit capped at 50; default 50"`
 }
 type readOutput struct {
@@ -30,9 +30,7 @@ type readOutput struct {
 	Body    string   `json:"body" jsonschema:"Markdown body excluding valid frontmatter"`
 	Problem string   `json:"problem,omitempty" jsonschema:"Frontmatter parse problem if present"`
 }
-type searchOutput struct {
-	Hits []search.Hit `json:"hits" jsonschema:"Ranked keyword matches"`
-}
+type searchOutput = app.SearchResult
 type emptyInput struct{}
 
 func limit(value *int) (int, error) {
@@ -57,13 +55,12 @@ func addReads(s *mcp.Server, state *server) {
 		n, _, err := kb.Read(state.root, in.ID)
 		return readOutput{n.ID, n.Title, n.Tags, n.Aliases, n.Body, n.Problem}, err
 	})
-	register(s, state, "search_notes", "Search keywords and return relative path IDs without .md capped at 50; invalid limits or index failures return tool errors and no matches returns an empty list.", func(ctx context.Context, idx *index.Index, in searchInput) (searchOutput, error) {
+	register(s, state, "search_notes", "Search notes by keyword, semantic similarity or hybrid RRF, with automatic keyword fallback; returns mode and at most 50 ranked hits.", func(ctx context.Context, idx *index.Index, in searchInput) (searchOutput, error) {
 		n, err := limit(in.Limit)
 		if err != nil {
 			return searchOutput{}, err
 		}
-		hits, err := (search.Search{Index: idx}).Keyword(ctx, in.Query, n)
-		return searchOutput{hits}, err
+		return app.SearchDefault(ctx, idx, in.Query, in.Mode, n, nil)
 	})
 	register(s, state, "get_links", "Return all outgoing links for one relative path ID without .md in body order; unknown IDs or index failures return tool errors.", func(ctx context.Context, idx *index.Index, in idInput) (index.Outgoing, error) {
 		return idx.Links(ctx, in.ID)

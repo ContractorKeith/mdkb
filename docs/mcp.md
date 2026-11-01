@@ -29,10 +29,10 @@ See the [official Codex MCP configuration documentation](https://learn.chatgpt.c
 |---|---|---|
 | `list_notes` | `{tag?, limit?}` | `ls`: notes, total, truncated; at most 50 |
 | `read_note` | `{id}` | `cat`: id, title, tags, aliases, body, optional problem |
-| `search_notes` | `{query, limit?}` | `search`: ranked hits; at most 50 |
+| `search_notes` | `{query, limit?, mode?}` | `search`: mode and ranked hits; at most 50 |
 | `get_links` | `{id}` | `links`: all outgoing occurrences in body order |
 | `get_backlinks` | `{id}` | `backlinks`: all incoming occurrences in source order |
-| `get_info` | `{}` | `info`: root, cache path, note and graph totals |
+| `get_info` | `{}` | `info`: root, cache path, note and graph totals, embeddings {model, notes, chunks} |
 | `write_note` | `{id, body, mode, frontmatter?}` | id, path, bytes, mode, commit |
 | `capture` | `{text, title?}` | id, path, bytes, mode, commit |
 
@@ -80,3 +80,12 @@ disabled commits, non-repositories and unchanged content return false.
 A git failure preserves the write and returns a successful tool result with
 `commit:false`, with a diagnostic on server stderr. See [write configuration](json.md#write-configuration-and-commits).
 Create messages use `mdkb: new <id>`; capture messages use `mdkb: capture <id>`.
+
+
+Search mode accepts `keyword`, `semantic` or `hybrid`. Omission selects hybrid
+only when semantic is enabled and vectors exist for the configured model.
+Otherwise it uses keyword. Explicit semantic/hybrid returns a tool error if
+vectors are missing or Ollama is unavailable. Automatic hybrid falls back to
+keyword with one diagnostic on server stderr. Hybrid hits include `sources`.
+Configure embeddings with [semantic settings](json.md#semantic-search-m5) and
+run `mdkb embed` through the CLI before semantic retrieval.

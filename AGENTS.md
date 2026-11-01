@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-M4 done — 2026-11-01: CLI new/capture/daily/mv, inbound link rewrites, git commit per write. M5–M6 remain.
+M5 done — 2026-11-01: opt-in Ollama embeddings, semantic/hybrid RRF search, CLI/MCP modes and evaluation harness. Real-model evaluation on Mac Studio pending; M6 remains.
 
 ## Commands
 ```bash

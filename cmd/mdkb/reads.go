@@ -7,7 +7,6 @@ import (
 	"github.com/ContractorKeith/mdkb/internal/app"
 	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
-	"github.com/ContractorKeith/mdkb/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -83,7 +82,8 @@ func addReads(cmd *cobra.Command, root *string, output outputFunc) {
 		return output(cmd, result, "%s", raw)
 	}})
 	var searchLimit int
-	find := &cobra.Command{Use: "search <q>", Short: "Search notes by keyword", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+	var keyword, semantic bool
+	find := &cobra.Command{Use: "search <q>", Short: "Search notes by keyword or meaning", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		if searchLimit < 1 {
 			return fmt.Errorf("limit must be positive")
 		}
@@ -92,19 +92,27 @@ func addReads(cmd *cobra.Command, root *string, output outputFunc) {
 			return err
 		}
 		defer idx.Close()
-		hits, err := (search.Search{Index: idx}).Keyword(cmd.Context(), args[0], searchLimit)
+		mode := ""
+		if keyword {
+			mode = "keyword"
+		}
+		if semantic {
+			mode = "semantic"
+		}
+		result, err := app.SearchDefault(cmd.Context(), idx, args[0], mode, searchLimit, cmd.ErrOrStderr())
 		if err != nil {
 			return err
 		}
 		var text strings.Builder
-		for _, h := range hits {
+		for _, h := range result.Hits {
 			fmt.Fprintf(&text, "%s\t%s\t%g\n%s\n", h.ID, h.Title, h.Score, h.Snippet)
 		}
-		return output(cmd, struct {
-			Hits []search.Hit `json:"hits"`
-		}{hits}, "%s", text.String())
+		return output(cmd, result, "%s", text.String())
 	}}
 	find.Flags().IntVar(&searchLimit, "limit", 50, "Maximum results")
+	find.Flags().BoolVar(&keyword, "keyword", false, "Force keyword search")
+	find.Flags().BoolVar(&semantic, "semantic", false, "Force semantic search")
+	find.MarkFlagsMutuallyExclusive("keyword", "semantic")
 	cmd.AddCommand(find)
 	var full bool
 	reindex := &cobra.Command{Use: "reindex", Short: "Synchronize the index", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, args []string) error {

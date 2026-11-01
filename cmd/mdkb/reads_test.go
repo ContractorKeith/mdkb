@@ -139,7 +139,7 @@ func TestIncrementalCommands(t *testing.T) {
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
 	}
-	if got := mustRun(t, "search", "uniqueterm", "--json"); got != "{\"hits\":[]}\n" {
+	if got := mustRun(t, "search", "uniqueterm", "--json"); got != "{\"mode\":\"keyword\",\"hits\":[]}\n" {
 		t.Fatal(got)
 	}
 	if got := mustRun(t, "tags", "--json"); strings.Contains(got, "unique") {

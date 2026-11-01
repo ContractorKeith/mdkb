@@ -5,16 +5,21 @@ import (
 	"context"
 	"math"
 
+	"github.com/ContractorKeith/mdkb/internal/embed"
 	"github.com/ContractorKeith/mdkb/internal/index"
 )
 
 type Hit struct {
-	ID      string  `json:"id" jsonschema:"id"`
-	Title   string  `json:"title" jsonschema:"title"`
-	Score   float64 `json:"score" jsonschema:"score"`
-	Snippet string  `json:"snippet" jsonschema:"snippet"`
+	Sources []string `json:"sources,omitempty"`
+	ID      string   `json:"id" jsonschema:"id"`
+	Title   string   `json:"title" jsonschema:"title"`
+	Score   float64  `json:"score" jsonschema:"score"`
+	Snippet string   `json:"snippet" jsonschema:"snippet"`
 }
-type Search struct{ Index *index.Index }
+type Search struct {
+	Index    *index.Index
+	Embedder embed.Embedder
+}
 
 // Keyword returns BM25 results, with lower scores ranking first.
 func (s Search) Keyword(ctx context.Context, q string, limit int) ([]Hit, error) {
@@ -24,7 +29,7 @@ func (s Search) Keyword(ctx context.Context, q string, limit int) ([]Hit, error)
 	}
 	hits := []Hit{}
 	for _, m := range matches {
-		hits = append(hits, Hit{m.ID, m.Title, math.Round(m.Score*1e4) / 1e4, m.Snippet})
+		hits = append(hits, Hit{ID: m.ID, Title: m.Title, Score: math.Round(m.Score*1e4) / 1e4, Snippet: m.Snippet})
 	}
 	return hits, nil
 }
