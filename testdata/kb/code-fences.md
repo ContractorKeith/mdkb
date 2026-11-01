@@ -10,3 +10,5 @@
 ~~~
 
 [[plain]] is a real link outside the fences.
+
+`[[inline-missing]]` and ``![[inline-embed-missing]]`` are code.

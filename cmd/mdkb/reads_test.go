@@ -55,6 +55,14 @@ func TestGoldens(t *testing.T) {
 		name string
 		args []string
 	}{
+		{"links-ambiguous-source", []string{"links", "ambiguous-source"}},
+		{"links-code-fences", []string{"links", "code-fences"}},
+		{"links-alias-source", []string{"links", "alias-source"}},
+		{"links-heading-source", []string{"links", "heading-source"}},
+		{"links-embed-source", []string{"links", "embed-source"}},
+		{"links-path-source", []string{"links", "path-source"}},
+		{"backlinks-plain", []string{"backlinks", "plain"}},
+		{"orphans", []string{"orphans"}}, {"broken", []string{"broken"}},
 		{"ls", []string{"ls"}}, {"tags", []string{"tags"}}, {"search-markdown", []string{"search", "markdown"}}, {"search-shared", []string{"search", "shared"}}, {"cat-welcome", []string{"cat", "welcome"}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

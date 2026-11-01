@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-M1 done — 2026-11-01: frontmatter, incremental FTS5 index, keyword search, and JSON contracts. M2–M6 remain.
+M2 done — 2026-11-01: wikilinks, backlinks, orphan and broken-link reports. M3–M6 remain.
 
 ## Commands
 ```bash

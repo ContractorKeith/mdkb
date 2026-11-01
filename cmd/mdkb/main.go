@@ -113,11 +113,16 @@ func newRoot() *cobra.Command {
 					return err
 				}
 				info.IndexPath = idx.Path
+				info.Links, info.BrokenLinks, info.Orphans, err = idx.LinkCounts(cmd.Context())
+				if err != nil {
+					return err
+				}
 			}
-			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems)
+			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\nLinks: %d\nBroken links: %d\nOrphans: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems, info.Links, info.BrokenLinks, info.Orphans)
 		},
 	})
 	addReads(cmd, &root, output)
+	addLinks(cmd, &root, output)
 	return cmd
 }
 
