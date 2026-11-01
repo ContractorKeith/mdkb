@@ -9,10 +9,10 @@ import (
 )
 
 type Hit struct {
-	ID      string  `json:"id"`
-	Title   string  `json:"title"`
-	Score   float64 `json:"score"`
-	Snippet string  `json:"snippet"`
+	ID      string  `json:"id" jsonschema:"id"`
+	Title   string  `json:"title" jsonschema:"title"`
+	Score   float64 `json:"score" jsonschema:"score"`
+	Snippet string  `json:"snippet" jsonschema:"snippet"`
 }
 type Search struct{ Index *index.Index }
 

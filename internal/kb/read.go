@@ -10,7 +10,7 @@ import (
 // Read resolves one ID without traversing unrelated notes. Child symlinks are refused.
 func Read(root, id string) (Note, string, error) {
 	refused := func() (Note, string, error) { return Note{}, "", fmt.Errorf("%s: %w", id, os.ErrNotExist) }
-	if id == "" || filepath.IsAbs(id) || strings.Contains(id, "..") {
+	if !validID(id) {
 		return refused()
 	}
 	clean := filepath.Clean(filepath.FromSlash(id))

@@ -55,6 +55,7 @@ metadata are not a portable contract.
   Invalid FTS expressions retry as a literal quoted phrase; no matches succeeds.
 - `cat <id>`:
   `{"id":"welcome","title":"Welcome","tags":["start"],"aliases":["Home"],"body":"# Welcome\n"}`.
+  Optional `problem` describes malformed frontmatter when present.
   JSON body excludes YAML frontmatter. Human output is the exact raw file,
   including frontmatter. Missing IDs exit 2; IDs omit `.md` and use `/` separators.
   Absolute/traversal IDs and child symlinks (including directory symlinks) are refused.
@@ -109,3 +110,17 @@ changed aliases are reflected without a full rebuild. M1 caches upgrade on sync.
 
 All empty collections remain `[]`. Index rows store `kind` as `link` or `embed`,
 with nullable `target_id`; display aliases never influence resolution.
+
+
+## M3 MCP tools
+
+See [MCP setup](mcp.md). Read tools use the same shapes above, with an optional
+`problem` on `read_note` as on `cat`. MCP list/search limits default to 50 and
+are capped at 50; non-positive limits are errors. Unknown IDs and refused writes
+return `isError:true` tool results.
+
+Both `write_note` and `capture` return
+`{"id":"00-Inbox/example","path":"00-Inbox/example.md","bytes":42,"mode":"create"}`.
+Path is relative to the root; bytes counts the entire resulting file.
+Modes are create, append and overwrite; capture always uses create.
+Neither write tool is registered without `--allow-write`.

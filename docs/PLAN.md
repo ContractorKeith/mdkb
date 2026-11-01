@@ -50,8 +50,8 @@ This keeps 1,454 real notes out of the blast radius while the tool is young.
 | 6 | `--json` on every read command | v1 | M1 | Stable shapes documented in `docs/json.md` |
 | 7 | Wikilinks: `[[note]]`, `[[note\|alias]]`, `[[note#heading]]`, `![[embed]]` | v1 | M2 | Resolution: exact path, then unique basename, then frontmatter alias |
 | 8 | `links`, `backlinks`, `orphans`, `broken` | v1 | M2 | |
-| 9 | MCP stdio server, read tools | v1 | M3 | `list_notes`, `read_note`, `search_notes`, `get_links`, `get_backlinks` |
-| 10 | MCP write tools behind `--allow-write` | v1 | M3 | `write_note` (create or append; overwrite needs `overwrite:true`), `capture` |
+| 9 | MCP stdio server, read tools | v1 | M3 | `list_notes`, `read_note`, `search_notes`, `get_links`, `get_backlinks`, `get_info` |
+| 10 | MCP write tools behind `--allow-write` | v1 | M3 | `write_note` (mode: create, append, overwrite), `capture` |
 | 11 | `new`, `capture` (to `00-Inbox/`), `daily` | v1 | M4 | `--body`, `--stdin`, `--tags`, `--dry-run` |
 | 12 | `mv` rewrites inbound links | v1 | M4 | `--dry-run` shows the diff |
 | 13 | Git commit per write when KB is a repo | v1 | M4 | `commit_on_write` config, default on |
@@ -72,7 +72,7 @@ cmd/mdkb/            cobra entrypoint only; no logic
 internal/kb/         the ONLY package that touches the KB folder: walk, parse, links, write, git
 internal/index/      SQLite schema, incremental sync, FTS5 queries, embeddings table
 internal/search/     keyword, semantic, fusion; returns ranked []Hit
-internal/mcpserver/  tool registration over internal/kb + internal/search
+internal/mcpserver/  tool registration over internal/app + internal/kb + internal/search
 internal/config/     ~/.config/mdkb/config.toml, env MDKB_ROOT, --root flag precedence
 testdata/kb/         golden fixture KB (~20 notes) every package tests against
 docs/PLAN.md         this file
@@ -149,7 +149,8 @@ Run from a clean clone on macOS and Linux:
    `testdata/golden/`.
 3. Delete the index file, `reindex --full`, re-run step 2: identical output.
 4. `mdkb mcp` under Claude Code: `list_notes` and `search_notes` return; `write_note` returns
-   an error without `--allow-write`; with it, the note exists and a commit was made.
+   an error without `--allow-write` (tool absent); with it, the note exists and is
+   reindexed. Git commits arrive in M4.
 5. `mdkb mv` on a note with three inbound links: `broken` reports zero afterward; `--dry-run`
    changed nothing.
 6. `ls` with 60 notes returns 50 and a `truncated: true` field in JSON.
