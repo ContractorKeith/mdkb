@@ -67,4 +67,8 @@ zero new broken links. Semantic real-model results remain pending Mac Studio.
 ## Earlier rounds
 
 Pre-release orchestrator reviews on PRs #10/#12 requested cached resolution and
-config read outside kb; M6a addresses both. No skeptic round completed yet.
+config read outside kb; M6a addresses both.
+
+2026-11-01 — skeptic round 1 targeted `3c582fc`. Report:
+`worklog/reports/mdkb-review-2026-11-01.md`; confirmed issues #15–#23 fixed
+on `fix/skeptic-round-1`, pending orchestrator review.

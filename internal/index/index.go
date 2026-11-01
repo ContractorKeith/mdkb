@@ -3,7 +3,6 @@ package index
 
 import (
 	"context"
-	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -28,36 +27,26 @@ func Error(err error) error {
 }
 
 func Open(root string) (*Index, error) {
-	root, err := filepath.Abs(root)
+	path, err := CachePath(root)
 	if err != nil {
-		return nil, Error(err)
+		return nil, err
 	}
-	cache := os.Getenv("XDG_CACHE_HOME")
-	if cache == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, Error(err)
-		}
-		cache = filepath.Join(home, ".cache")
-	}
-	hash := sha256.Sum256([]byte(root))
-	path := filepath.Join(cache, "mdkb", fmt.Sprintf("%x.db", hash[:8]))
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return nil, Error(err)
 	}
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, Error(err)
+		return nil, &unreadableError{path, err}
 	}
 	db.SetMaxOpenConns(1)
 	idx := &Index{db: db, Path: path}
 	if _, err := db.Exec("PRAGMA busy_timeout=5000;" + schema); err != nil {
 		db.Close()
-		return nil, Error(err)
+		return nil, &unreadableError{path, err}
 	}
 	if err := idx.ensureProblemColumn(); err != nil {
 		db.Close()
-		return nil, Error(err)
+		return nil, &unreadableError{path, err}
 	}
 	return idx, nil
 }

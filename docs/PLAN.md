@@ -120,7 +120,7 @@ mdkb tags                        mdkb new <title> [--body|--stdin] [--tags a,b] 
 mdkb info                        mdkb capture [--title] [--stdin]
 mdkb reindex [--full]            mdkb daily [--append TEXT]
 mdkb embed [--model M]           mdkb mv <old> <new> [--dry-run]
-mdkb mcp [--allow-write]         mdkb doctor
+mdkb mcp [--allow-write]
 ```
 
 Exit codes: 0 ok, 1 usage, 2 not found, 3 KB not initialized, 4 index error, 5 write refused.

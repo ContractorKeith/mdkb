@@ -11,7 +11,12 @@ func noteDir(root, id string, create bool) (*os.Root, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	parts := strings.Split(id, "/")
+	rel, err := resolveNotePath(dir, id+".md")
+	if err != nil {
+		dir.Close()
+		return nil, "", err
+	}
+	parts := strings.Split(strings.TrimSuffix(rel, ".md"), "/")
 	for _, part := range parts[:len(parts)-1] {
 		stat, err := dir.Lstat(part)
 		if os.IsNotExist(err) && create {
@@ -61,7 +66,17 @@ func renameNote(root, old, new string) error {
 		return err
 	}
 	defer dir.Close()
-	if err := dir.Rename(old+".md", new+".md"); err != nil {
+	oldPath, err := resolveNotePath(dir, old+".md")
+	if err != nil {
+		dest.Remove(newName)
+		return err
+	}
+	newPath, err := resolveNotePath(dir, new+".md")
+	if err != nil {
+		dest.Remove(newName)
+		return err
+	}
+	if err := dir.Rename(oldPath, newPath); err != nil {
 		dest.Remove(newName)
 		return err
 	}

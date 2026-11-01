@@ -20,7 +20,7 @@ func ExtractLinks(body string) []LinkRef {
 		lineOffset := offset
 		offset += len(line) + 1
 		trimmed := strings.TrimSpace(line)
-		if inline == 0 && (strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~")) {
+		if inline == 0 && fenceLine(trimmed) {
 			if fence == 0 {
 				fence = trimmed[0]
 			} else if fence == trimmed[0] {
@@ -59,7 +59,7 @@ func ExtractLinks(body string) []LinkRef {
 			ref := LinkRef{Raw: raw, Start: lineOffset + p + 2, End: lineOffset + end, Embed: p > 0 && line[p-1] == '!', Line: lineNo + 1}
 			target, alias, _ := strings.Cut(raw, "|")
 			target, heading, _ := strings.Cut(target, "#")
-			ref.Target, ref.Heading, ref.Alias = strings.TrimSpace(target), strings.TrimSpace(heading), strings.TrimSpace(alias)
+			ref.Target, ref.Heading, ref.Alias = CanonicalID(strings.TrimSpace(target)), strings.TrimSpace(heading), strings.TrimSpace(alias)
 			if ref.Target != "" {
 				result = append(result, ref)
 			}

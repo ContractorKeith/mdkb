@@ -4,8 +4,8 @@ Local-first knowledge base over plain Markdown files. One Go binary: CLI plus MC
 FTS5 keyword search, opt-in local embeddings, Obsidian-style wikilinks and backlinks,
 git-committed agent writes. Your files stay the source of truth.
 
-**Status:** v0.1.0 pending skeptic review (2026-11-01). M6a complete; macOS/Linux
-skeptic review, Mac Studio real-model evaluation, tag and tap publication remain.
+**Status:** Skeptic round 1 fixes awaiting orchestrator review (2026-11-01).
+Mac Studio real-model evaluation, tag and tap publication remain.
 See [the plan](docs/PLAN.md).
 
 ## Install
@@ -20,12 +20,19 @@ From source (Go 1.27 required):
 
 ```bash
 go install github.com/ContractorKeith/mdkb/cmd/mdkb@latest
+export PATH="$(go env GOPATH)/bin:$PATH"
 ```
+
+Source installs report `mdkb dev`; release binaries report the release tag.
 
 Or download the matching macOS/Linux amd64/arm64 tarball from
 [GitHub Releases](https://github.com/ContractorKeith/mdkb/releases), verify it
 against `checksums.txt` (`sha256sum` on Linux, `shasum -a 256` on macOS), extract
 it, and place `mdkb` on your PATH. Git on PATH enables commits for writes.
+
+macOS tarball binaries are unsigned, so Gatekeeper may block them. Prefer
+Homebrew or `go install`. After verifying the checksum, you can remove the
+download quarantine with `xattr -d com.apple.quarantine mdkb`.
 
 ## Quick start (60 seconds)
 

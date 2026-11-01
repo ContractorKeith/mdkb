@@ -3,39 +3,42 @@ package kb
 import (
 	"io/fs"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
-// Walk skips dot-directories and child symlinks, matching Info's file selection.
+// Walk skips dot-directories, invalid IDs and child symlinks, matching Info.
 func Walk(root string) ([]Note, error) {
-	walkRoot, err := filepath.EvalSymlinks(root)
+	notes, _, err := walkNotes(root)
+	return notes, err
+}
+
+func walkNotes(root string) ([]Note, int, error) {
+	dir, err := os.OpenRoot(root)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+	defer dir.Close()
 	notes := []Note{}
-	err = filepath.WalkDir(walkRoot, func(path string, entry fs.DirEntry, err error) error {
+	problems := 0
+	err = fs.WalkDir(dir.FS(), ".", func(rel string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if entry.IsDir() {
-			if path != walkRoot && strings.HasPrefix(entry.Name(), ".") {
-				return filepath.SkipDir
+			if rel != "." && strings.HasPrefix(entry.Name(), ".") {
+				return fs.SkipDir
 			}
 			return nil
 		}
-		if !entry.Type().IsRegular() || filepath.Ext(path) != ".md" {
+		if !entry.Type().IsRegular() || path.Ext(rel) != ".md" {
 			return nil
 		}
-		stat, err := entry.Info()
-		if err != nil {
-			return err
+		if ValidateID(strings.TrimSuffix(rel, ".md"), false) != nil {
+			problems++
+			return nil
 		}
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		rel, err := filepath.Rel(walkRoot, path)
+		raw, stat, err := readNoteFile(dir, rel)
 		if err != nil {
 			return err
 		}
@@ -45,7 +48,10 @@ func Walk(root string) ([]Note, error) {
 		}
 		note.MTime, note.Size = stat.ModTime().UnixNano(), stat.Size()
 		notes = append(notes, note)
+		if note.Problem != "" {
+			problems++
+		}
 		return nil
 	})
-	return notes, err
+	return notes, problems, err
 }

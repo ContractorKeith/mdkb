@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-M6a done — 2026-11-01: release workflow, Homebrew template, skeptic environment and pre-release cleanups. v0.1.0 pending macOS/Linux skeptic review, Mac Studio real-model evaluation, tap publication and tag.
+Skeptic round 1 fixed — 2026-11-01: issues #15–#23. v0.1.0 tag pending orchestrator review, Mac Studio real-model evaluation and tap publication.
 
 ## Commands
 ```bash

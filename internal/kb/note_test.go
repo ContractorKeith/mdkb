@@ -15,6 +15,7 @@ func TestParse(t *testing.T) {
 	}{
 		{"---\ntitle: Explicit\ntags: single\naliases: [Alias]\ncreated: 2026-10-01\nupdated: 2026-11-01\n---\n# Heading\n", "Explicit", 1},
 		{"---\ntags: [one, two]\n---\n# Heading\n", "Heading", 2},
+		{"```[[ignore]]``` [[welcome]]\n# Actual\n", "Actual", 0},
 		{"no heading\n", "file", 0},
 		{"```md\n# Ignored\n```\n# Actual\n", "Actual", 0},
 		{"---\n---\n# Empty metadata\n", "Empty metadata", 0},

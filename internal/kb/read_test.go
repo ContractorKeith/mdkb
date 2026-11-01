@@ -10,6 +10,7 @@ import (
 )
 
 func TestReadDirect(t *testing.T) {
+	isolateRoundTest(t)
 	root := t.TempDir()
 	raw := "---\ntitle: Direct\n---\n# Heading\n"
 	write(t, filepath.Join(root, "nested", "note.md"), raw)
@@ -28,8 +29,11 @@ func TestReadDirect(t *testing.T) {
 	if err := os.Symlink(filepath.Join(root, "nested"), filepath.Join(root, "linked-dir")); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Symlink("nested/note.md", filepath.Join(root, "relative-link.md")); err != nil {
+		t.Fatal(err)
+	}
 	write(t, filepath.Join(root, ".hidden", "note.md"), "# Hidden")
-	for _, id := range []string{"nested/./note", "../outside", "nested/../nested/note", filepath.Join(root, "nested/note"), "link", "linked-dir/note", ".hidden/note"} {
+	for _, id := range []string{"nested/./note", "../outside", "nested/../nested/note", filepath.Join(root, "nested/note"), "link", "relative-link", "linked-dir/note", ".hidden/note"} {
 		if _, got, err := kb.Read(root, id); err == nil || got != "" {
 			t.Fatalf("read %q: %q %v", id, got, err)
 		}

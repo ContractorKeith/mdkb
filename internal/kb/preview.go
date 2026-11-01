@@ -8,7 +8,8 @@ import (
 
 // PreviewWrite validates a proposed write without creating directories or files.
 func PreviewWrite(root, id, mode string) error {
-	if !validID(id) {
+	id = CanonicalID(id)
+	if ValidateID(id, true) != nil {
 		return refuse(errors.New("invalid note id: " + id))
 	}
 	ok, err := hasMarker(root)
@@ -23,7 +24,11 @@ func PreviewWrite(root, id, mode string) error {
 		return refuse(err)
 	}
 	defer dir.Close()
-	parts := strings.Split(id+".md", "/")
+	rel, err := resolveNotePath(dir, id+".md")
+	if err != nil {
+		return refuse(err)
+	}
+	parts := strings.Split(rel, "/")
 	for i := range parts {
 		stat, err := dir.Lstat(strings.Join(parts[:i+1], "/"))
 		if errors.Is(err, os.ErrNotExist) {
@@ -49,14 +54,6 @@ func PreviewWrite(root, id, mode string) error {
 				return refuse(os.ErrExist)
 			}
 		}
-	}
-	return nil
-}
-
-// ValidateID applies the write identifier contract without touching storage.
-func ValidateID(id string) error {
-	if !validID(id) {
-		return refuse(errors.New("invalid note id: " + id))
 	}
 	return nil
 }

@@ -4,16 +4,15 @@ package kb
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var ErrWriteRefused = errors.New("write refused")
 
 // Details is the stable info response, including for an uninitialized directory.
 type Details struct {
+	Problem    map[string]string `json:"problem,omitempty" jsonschema:"Inspector problems by component"`
 	Embeddings struct {
 		Model  string `json:"model"`
 		Notes  int    `json:"notes"`
@@ -112,33 +111,7 @@ func Info(root string) (Details, error) {
 	if err != nil {
 		return result, err
 	}
-	// WalkDir does not follow even a root symlink; resolve it explicitly.
-	walkRoot, err := filepath.EvalSymlinks(absolute)
-	if err != nil {
-		return result, err
-	}
-	err = filepath.WalkDir(walkRoot, func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.IsDir() {
-			if path != walkRoot && strings.HasPrefix(entry.Name(), ".") {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if entry.Type().IsRegular() && filepath.Ext(entry.Name()) == ".md" {
-			result.NoteCount++
-			raw, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			note, _ := Parse(entry.Name(), raw)
-			if note.Problem != "" {
-				result.Problems++
-			}
-		}
-		return nil
-	})
+	notes, problems, err := walkNotes(absolute)
+	result.NoteCount, result.Problems = len(notes), problems
 	return result, err
 }

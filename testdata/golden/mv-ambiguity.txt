@@ -1,0 +1,2 @@
+{"old":"a","new":"other/shared","rewritten":[{"id":"source","count":1}],"total":1,"commit":false}
+![[folder/shared#Heading|Alias]]

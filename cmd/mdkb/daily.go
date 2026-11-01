@@ -32,7 +32,7 @@ func addDaily(parent *cobra.Command, root *string, output outputFunc) {
 		}
 		id := cfg.DailyDir + "/" + date
 		// Validate the configured directory before treating a missing file as create.
-		if err := kb.ValidateID(id); err != nil {
+		if err := kb.ValidateID(id, true); err != nil {
 			return err
 		}
 		_, _, readErr := kb.Read(path, id)
@@ -73,7 +73,7 @@ func addMove(parent *cobra.Command, root *string, output outputFunc) {
 			return err
 		}
 		for _, id := range args {
-			if err := kb.ValidateID(id); err != nil {
+			if err := kb.ValidateID(id, true); err != nil {
 				return err
 			}
 		}

@@ -12,7 +12,10 @@ Successful --json output is one object and a newline on stdout:
   Counts regular *.md files recursively, excluding dot-directories and child symlinks; a symlink root is supported.
   An existing directory without the marker returns initialized:false with exit 0;
   uninitialized info is an inspector and never creates files (`indexed_notes:0`,
-  `index_path:""`). Initialized info synchronizes the index. A missing root exits 2.
+  `index_path:""`). Initialized info synchronizes the index. If the cache is unreadable, it still
+  returns `index_path`, `indexed_notes:0` and `problem:{"index":"unreadable"}`.
+  Run `mdkb reindex --full` to discard the corrupt cache and SQLite sidecars.
+  Cache paths hash the symlink-resolved root. A missing root exits 2.
 - init [path]: {"root":"/absolute/path","dry_run":false}.
   --dry-run validates without writing and returns dry_run:true. This shape does
   not assert that a dry run has initialized the directory.
@@ -73,7 +76,9 @@ searchable. `ls --json` includes `problem` only on affected notes; `info` includ
 
 All graph reads auto-sync. Link lines are one-based within the Markdown body,
 excluding successfully parsed frontmatter. Fenced code (backtick or tilde, using
-M1's title-fallback fence rule) and matched inline backtick spans are ignored.
+the shared title-fallback fence rule) and matched inline backtick spans are ignored.
+A backtick fence opener cannot contain another backtick after its opening run.
+HTML comments are not excluded by the link scanner (known limitation).
 Links and embeds support optional heading and display alias together.
 Targets, headings and display aliases are trimmed; empty targets are ignored.
 
@@ -241,3 +246,6 @@ Each result contains per-query metrics and their means. Hit@3 is binary (any
 relevant ID in the first three); MRR is reciprocal rank of the first relevant
 ID within the top 50. Expected IDs are relevance judgments, not a required
 ordering. See [the evaluation procedure](search-eval.md).
+
+Note IDs, basenames, aliases and link targets compare after NFC Unicode normalization.
+Public IDs use NFC; file paths retain their on-disk spelling.
