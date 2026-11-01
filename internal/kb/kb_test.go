@@ -122,7 +122,7 @@ func TestInfo(t *testing.T) {
 
 func TestFixtureInfo(t *testing.T) {
 	info, err := kb.Info("../../testdata/kb")
-	if err != nil || info.NoteCount != 21 || info.Initialized {
+	if err != nil || info.NoteCount != 22 || info.Initialized {
 		t.Fatalf("fixture info = %+v, %v", info, err)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ContractorKeith/mdkb/internal/config"
+	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
 	"github.com/spf13/cobra"
 )
@@ -98,9 +99,25 @@ func newRoot() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\n", info.Root, info.NoteCount, info.Initialized)
+			if info.Initialized {
+				idx, err := index.Open(path)
+				if err != nil {
+					return err
+				}
+				defer idx.Close()
+				if err := idx.Sync(cmd.Context(), path, false); err != nil {
+					return err
+				}
+				info.IndexedNotes, err = idx.Count(cmd.Context())
+				if err != nil {
+					return err
+				}
+				info.IndexPath = idx.Path
+			}
+			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems)
 		},
 	})
+	addReads(cmd, &root, output)
 	return cmd
 }
 
@@ -109,6 +126,10 @@ func exitCode(err error) int {
 	switch {
 	case err == nil:
 		return 0
+	case errors.Is(err, errUninitialized):
+		return 3
+	case errors.Is(err, index.ErrIndex):
+		return 4
 	case errors.Is(err, kb.ErrWriteRefused):
 		return 5
 	case errors.Is(err, os.ErrNotExist):

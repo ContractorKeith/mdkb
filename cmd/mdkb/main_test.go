@@ -22,6 +22,7 @@ func run(args ...string) (string, error) {
 }
 
 func TestCommandContract(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("MDKB_ROOT", "")

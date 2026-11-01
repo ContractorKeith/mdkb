@@ -1,12 +1,13 @@
 # Golden fixture KB
 
-Twenty notes plus this README (21 Markdown files). This is source data, not an
+Twenty-one notes plus this README (22 Markdown files). This is source data, not an
 initialized KB: initialize a temporary directory and copy these fixtures into it.
 Do not normalize the deliberate ambiguities or broken links.
 
 | File | Exercises |
 | --- | --- |
 | 00-Inbox/capture.md | Tags only; filename fallback; inbox folder |
+| bad-frontmatter.md | Unterminated metadata; readable fallback and problem report |
 | welcome.md | Title, tags, aliases, created and updated; basic links |
 | plain.md | No frontmatter or H1; heading link |
 | h1-only.md | H1 title fallback; display alias |
