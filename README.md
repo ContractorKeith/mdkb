@@ -4,9 +4,9 @@ Local-first knowledge base over plain Markdown files. One Go binary: CLI plus MC
 FTS5 keyword search, opt-in local embeddings, Obsidian-style wikilinks and backlinks,
 git-committed agent writes. Your files stay the source of truth.
 
-**Status:** Skeptic round 1 fixes awaiting orchestrator review (2026-11-01).
-Mac Studio real-model evaluation, tag and tap publication remain.
-See [the plan](docs/PLAN.md).
+**Status:** v0.1.0 released 2026-11-01 after a two-platform skeptic round (#15–#23 fixed).
+Semantic search is opt-in; its real-model evaluation on the Mac Studio is still pending.
+See [the plan](docs/PLAN.md) and the [changelog](CHANGELOG.md).
 
 ## Install
 
