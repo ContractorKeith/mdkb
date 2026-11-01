@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-M0 done — 2026-11-01: CLI scaffold, init, config, info, CI, and fixture KB. M1–M6 remain.
+M1 done — 2026-11-01: frontmatter, incremental FTS5 index, keyword search, and JSON contracts. M2–M6 remain.
 
 ## Commands
 ```bash
@@ -24,6 +24,7 @@ test -z "$(gofmt -l .)" && go vet ./... && staticcheck ./...
 ## Conventions & Gotchas
 - `internal/kb` is the only package that touches the KB folder. `cmd/` and `internal/mcpserver`
   contain no file or SQL access.
+- `internal/index` alone imports `database/sql`; `internal/search` owns ranked `Hit` results.
 - Default KB root is `~/kb`. Never point tests or examples at `~/vault`.
 - Every read command has `--json`; every write has `--dry-run`. Keep `docs/json.md` in step.
 - Pure Go only (`modernc.org/sqlite`, no CGO) so cross-compiles stay one command.

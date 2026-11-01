@@ -15,9 +15,11 @@ var ErrWriteRefused = errors.New("write refused")
 
 // Details is the stable info response, including for an uninitialized directory.
 type Details struct {
-	Root        string `json:"root"`
-	NoteCount   int    `json:"note_count"`
-	Initialized bool   `json:"initialized"`
+	IndexedNotes int    `json:"indexed_notes"`
+	IndexPath    string `json:"index_path"`
+	Root         string `json:"root"`
+	NoteCount    int    `json:"note_count"`
+	Initialized  bool   `json:"initialized"`
 }
 
 // Init creates a KB, leaving an existing KB untouched.
