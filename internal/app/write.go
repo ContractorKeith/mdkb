@@ -10,6 +10,11 @@ import (
 
 // Write publishes, reindexes and commits a logical write for both front ends.
 func Write(ctx context.Context, idx *index.Index, root, id, content, mode, verb string) (kb.WriteResult, error) {
+	release, err := kb.LockWrites(root)
+	if err != nil {
+		return kb.WriteResult{}, err
+	}
+	defer release()
 	result, err := kb.Write(root, id, content, mode)
 	if err != nil {
 		return result, err

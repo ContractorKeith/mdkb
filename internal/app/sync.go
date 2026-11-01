@@ -23,6 +23,12 @@ func Synced(ctx context.Context, root string, full bool) (*index.Index, string, 
 	if err != nil || !info.Initialized {
 		return nil, "", fmt.Errorf("%w: %s", ErrUninitialized, path)
 	}
+	// Initial sync also writes SQLite; serialize it with note publication.
+	release, err := kb.LockWrites(path)
+	if err != nil {
+		return nil, "", err
+	}
+	defer release()
 	idx, err := index.Open(path)
 	if err != nil {
 		return nil, "", err

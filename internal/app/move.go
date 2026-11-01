@@ -12,6 +12,11 @@ import (
 )
 
 func Move(ctx context.Context, idx *index.Index, root, old, new string, dry bool) (kb.MoveResult, string, error) {
+	release, err := kb.LockWrites(root)
+	if err != nil {
+		return kb.MoveResult{}, "", err
+	}
+	defer release()
 	old, new = kb.CanonicalID(old), kb.CanonicalID(new)
 	// Validate before querying so invalid IDs are refused writes.
 	if err := kb.PreviewWrite(root, new, "create"); err != nil {
