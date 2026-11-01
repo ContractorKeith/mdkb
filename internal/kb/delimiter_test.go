@@ -9,6 +9,7 @@ import (
 )
 
 func TestWriteIDDelimiters(t *testing.T) {
+	isolateRoundTest(t)
 	root := t.TempDir()
 	if err := kb.Init(root); err != nil {
 		t.Fatal(err)

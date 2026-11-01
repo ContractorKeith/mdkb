@@ -8,6 +8,7 @@ import (
 )
 
 func TestListedIDsReadable(t *testing.T) {
+	isolateRoundTest(t)
 	root := t.TempDir()
 	for _, name := range []string{"a..b.md", "ending.md.md", ".md", ".secret.md"} {
 		write(t, filepath.Join(root, name), "# Note\n")

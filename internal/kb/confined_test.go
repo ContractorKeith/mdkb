@@ -9,6 +9,7 @@ import (
 )
 
 func TestWalkConfinedReads(t *testing.T) {
+	isolateRoundTest(t)
 	root := t.TempDir()
 	outside := filepath.Join(t.TempDir(), "private.md")
 	write(t, outside, "# OUTSIDE_SECRET_SENTINEL\n")

@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# Local-first Markdown knowledge base.
 class Mdkb < Formula
   desc "Local-first Markdown knowledge base with CLI and MCP server"
   homepage "https://github.com/ContractorKeith/mdkb"

@@ -39,7 +39,11 @@ See the [official Codex MCP configuration documentation](https://learn.chatgpt.c
 Read outputs use the [CLI JSON contracts](json.md). Empty collections are arrays.
 Limits default to 50, must be positive, and are capped at 50. Every call syncs
 the index first. Unknown IDs, refused writes and storage failures return MCP
-tool errors (`isError: true`) so the agent can correct them.
+tool errors (`isError: true`) so the agent can correct them. These are errors
+inside a registered tool. Unknown or unregistered tools return JSON-RPC
+`-32602` (SDK behaviour), including write tools when `--allow-write` is absent.
+One malformed JSON line ends the stdio session (SDK behaviour); the client
+restarts the server.
 
 IDs are paths relative to the KB root without `.md`, with `/` separators,
 such as `projects/design`. Absolute paths, empty or dot segments, hidden path

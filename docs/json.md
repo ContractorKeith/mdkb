@@ -76,7 +76,9 @@ searchable. `ls --json` includes `problem` only on affected notes; `info` includ
 
 All graph reads auto-sync. Link lines are one-based within the Markdown body,
 excluding successfully parsed frontmatter. Fenced code (backtick or tilde, using
-M1's title-fallback fence rule) and matched inline backtick spans are ignored.
+the shared title-fallback fence rule) and matched inline backtick spans are ignored.
+A backtick fence opener cannot contain another backtick after its opening run.
+HTML comments are not excluded by the link scanner (known limitation).
 Links and embeds support optional heading and display alias together.
 Targets, headings and display aliases are trimmed; empty targets are ignored.
 
