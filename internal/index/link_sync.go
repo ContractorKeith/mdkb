@@ -44,10 +44,11 @@ func resolveLinks(ctx context.Context, tx *sql.Tx, notes []kb.Note) error {
 	if err != nil {
 		return err
 	}
+	resolver := kb.NewResolver(notes)
 	for _, target := range targets {
-		id, ok := kb.Resolve(target, notes)
+		id, reason := resolver.ResolveLink(target)
 		var resolved any
-		if ok {
+		if reason == "" {
 			resolved = id
 		}
 		if _, err := tx.ExecContext(ctx, "UPDATE links SET target_id=? WHERE target_raw=? AND target_id IS NOT ?", resolved, target, resolved); err != nil {

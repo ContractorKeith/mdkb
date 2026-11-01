@@ -3,7 +3,76 @@ package kb
 import (
 	"path"
 	"strings"
+	"unicode"
 )
+
+// Resolver indexes exact IDs, basenames and aliases for one graph snapshot.
+type Resolver struct {
+	ids       map[string]bool
+	basenames map[string]string
+	aliases   map[string]string
+}
+
+// NewResolver records ambiguous matches as empty IDs.
+func NewResolver(notes []Note) *Resolver {
+	r := &Resolver{map[string]bool{}, map[string]string{}, map[string]string{}}
+	add := func(m map[string]string, key, id string) {
+		if old, exists := m[key]; exists && old != id {
+			m[key] = ""
+		} else {
+			m[key] = id
+		}
+	}
+	for _, n := range notes {
+		r.ids[n.ID] = true
+		add(r.basenames, path.Base(n.ID), n.ID)
+		for _, alias := range n.Aliases {
+			add(r.aliases, foldAlias(alias), n.ID)
+		}
+	}
+	return r
+}
+
+// foldAlias preserves strings.EqualFold semantics, including Unicode fold cycles.
+func foldAlias(s string) string {
+	return strings.Map(func(r rune) rune {
+		smallest := r
+		for next := unicode.SimpleFold(r); next != r; next = unicode.SimpleFold(next) {
+			if next < smallest {
+				smallest = next
+			}
+		}
+		return smallest
+	}, s)
+}
+
+// ResolveLink tries exact ID, unique basename, then unique case-insensitive alias.
+func (r *Resolver) ResolveLink(target string) (id, reason string) {
+	target = strings.TrimSpace(target)
+	if r.ids[target] {
+		return target, ""
+	}
+	aliasTarget := target
+	target = strings.TrimSuffix(target, ".md")
+	if r.ids[target] {
+		return target, ""
+	}
+	if !strings.Contains(target, "/") {
+		if id, exists := r.basenames[target]; exists {
+			if id == "" {
+				return "", "ambiguous"
+			}
+			return id, ""
+		}
+	}
+	if id, exists := r.aliases[foldAlias(aliasTarget)]; exists {
+		if id == "" {
+			return "", "ambiguous"
+		}
+		return id, ""
+	}
+	return "", "missing"
+}
 
 // Resolve tries exact ID, unique basename, then unique case-insensitive alias.
 func Resolve(target string, notes []Note) (string, bool) {
@@ -13,49 +82,5 @@ func Resolve(target string, notes []Note) (string, bool) {
 
 // ResolveLink also explains unresolved references for the broken-link report.
 func ResolveLink(target string, notes []Note) (id, reason string) {
-	target = strings.TrimSpace(target)
-	for _, n := range notes {
-		if n.ID == target {
-			return n.ID, ""
-		}
-	}
-	aliasTarget := target
-	target = strings.TrimSuffix(target, ".md")
-	for _, n := range notes {
-		if n.ID == target {
-			return n.ID, ""
-		}
-	}
-	if !strings.Contains(target, "/") {
-		count := 0
-		for _, n := range notes {
-			if path.Base(n.ID) == target {
-				id = n.ID
-				count++
-			}
-		}
-		if count == 1 {
-			return id, ""
-		}
-		if count > 1 {
-			return "", "ambiguous"
-		}
-	}
-	count := 0
-	for _, n := range notes {
-		for _, alias := range n.Aliases {
-			if strings.EqualFold(alias, aliasTarget) {
-				id = n.ID
-				count++
-				break
-			}
-		}
-	}
-	if count == 1 {
-		return id, ""
-	}
-	if count > 1 {
-		return "", "ambiguous"
-	}
-	return "", "missing"
+	return NewResolver(notes).ResolveLink(target)
 }

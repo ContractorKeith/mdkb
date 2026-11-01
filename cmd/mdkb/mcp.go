@@ -8,7 +8,7 @@ import (
 func addMCP(cmd *cobra.Command, root *string) {
 	var allowWrite bool
 	command := &cobra.Command{Use: "mcp", Short: "Serve MCP over stdio", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		return mcpserver.Run(cmd.Context(), *root, allowWrite)
+		return mcpserver.Run(cmd.Context(), *root, allowWrite, version)
 	}}
 	command.Flags().BoolVar(&allowWrite, "allow-write", false, "Register write_note and capture tools")
 	cmd.AddCommand(command)

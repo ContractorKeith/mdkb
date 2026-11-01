@@ -88,7 +88,7 @@ func TestNonRepoAndConfig(t *testing.T) {
 	if err := os.RemoveAll(filepath.Join(root, ".git")); err != nil {
 		t.Fatal(err)
 	}
-	if err := kb.CommitWrite(root, []string{"missing.md"}, "mdkb: new missing"); err != nil {
+	if _, err := commitWrite(root, []string{"missing.md"}, "mdkb: new missing"); err != nil {
 		t.Fatal(err)
 	}
 	home := os.Getenv("HOME")
@@ -101,7 +101,7 @@ func TestNonRepoAndConfig(t *testing.T) {
 	t.Setenv("MDKB_COMMIT_ON_WRITE", "")
 	git(t, root, "init", "-q")
 
-	if err := kb.CommitWrite(root, []string{"missing.md"}, "mdkb: new missing"); err != nil {
+	if _, err := commitWrite(root, []string{"missing.md"}, "mdkb: new missing"); err != nil {
 		t.Fatal(err)
 	}
 }

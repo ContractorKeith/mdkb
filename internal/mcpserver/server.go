@@ -11,13 +11,13 @@ import (
 )
 
 // New checks initialization before registering tools.
-func New(root string, allowWrite bool) (*mcp.Server, error) {
+func New(root string, allowWrite bool, version string) (*mcp.Server, error) {
 	idx, path, err := app.Synced(context.Background(), root, false)
 	if err != nil {
 		return nil, err
 	}
 	idx.Close()
-	s := mcp.NewServer(&mcp.Implementation{Name: "mdkb", Version: "dev"}, nil)
+	s := mcp.NewServer(&mcp.Implementation{Name: "mdkb", Version: version}, nil)
 	state := &server{root: path}
 	addReads(s, state)
 	if allowWrite {
@@ -27,8 +27,8 @@ func New(root string, allowWrite bool) (*mcp.Server, error) {
 }
 
 // Run gives stdout exclusively to the stdio transport.
-func Run(ctx context.Context, root string, allowWrite bool) error {
-	s, err := New(root, allowWrite)
+func Run(ctx context.Context, root string, allowWrite bool, version string) error {
+	s, err := New(root, allowWrite, version)
 	if err != nil {
 		return err
 	}

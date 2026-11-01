@@ -23,6 +23,13 @@ func TestImportBoundary(t *testing.T) {
 		if err := decoder.Decode(&pkg); err != nil {
 			t.Fatal(err)
 		}
+		if pkg.ImportPath == "github.com/ContractorKeith/mdkb/internal/kb" {
+			for _, path := range pkg.Imports {
+				if path == "github.com/ContractorKeith/mdkb/internal/config" {
+					t.Fatal("kb must receive settings from app")
+				}
+			}
+		}
 		if pkg.ImportPath != "github.com/ContractorKeith/mdkb/internal/mcpserver" {
 			continue
 		}

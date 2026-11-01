@@ -24,16 +24,19 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 			return Error(err)
 		}
 	}
-	rows, err := tx.QueryContext(ctx, "SELECT path,mtime,size FROM notes ORDER BY path")
+	rows, err := tx.QueryContext(ctx, "SELECT path,mtime,size,EXISTS(SELECT 1 FROM link_sources WHERE note_id=notes.id) FROM notes ORDER BY path")
 	if err != nil {
 		return Error(err)
 	}
-	type stamp struct{ mtime, size int64 }
+	type stamp struct {
+		mtime, size int64
+		scanned     bool
+	}
 	old := map[string]stamp{}
 	for rows.Next() {
 		var path string
 		var s stamp
-		if err := rows.Scan(&path, &s.mtime, &s.size); err != nil {
+		if err := rows.Scan(&path, &s.mtime, &s.size, &s.scanned); err != nil {
 			rows.Close()
 			return Error(err)
 		}
@@ -44,21 +47,21 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 	if err != nil {
 		return Error(err)
 	}
+	changed := full
 	for _, n := range notes {
 		s, exists := old[n.Path]
 		delete(old, n.Path)
-		var scanned int
-		if err := tx.QueryRowContext(ctx, "SELECT count(*) FROM link_sources WHERE note_id=?", n.ID).Scan(&scanned); err != nil {
-			return Error(err)
-		}
-		if exists && s.mtime == n.MTime && s.size == n.Size && scanned != 0 {
+
+		if exists && s.mtime == n.MTime && s.size == n.Size && s.scanned {
 			continue
 		}
+		changed = true
 		if err := upsertNote(ctx, tx, n); err != nil {
 			return Error(err)
 		}
 	}
 	for path := range old {
+		changed = true
 		if _, err = tx.ExecContext(ctx, "DELETE FROM links WHERE from_id=(SELECT id FROM notes WHERE path=?)", path); err != nil {
 			return Error(err)
 		}
@@ -72,8 +75,10 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 			return Error(err)
 		}
 	}
-	if err := resolveLinks(ctx, tx, notes); err != nil {
-		return Error(err)
+	if changed {
+		if err := resolveLinks(ctx, tx, notes); err != nil {
+			return Error(err)
+		}
 	}
 	return Error(tx.Commit())
 }

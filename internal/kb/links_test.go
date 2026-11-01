@@ -39,11 +39,12 @@ func TestExtractLinks(t *testing.T) {
 }
 
 func TestResolve(t *testing.T) {
-	notes := []Note{{ID: "plain", Aliases: []string{"Root Alias", "Document.md"}}, {ID: "nested/unique", Aliases: []string{"Name", "Name"}}, {ID: "a/shared", Aliases: []string{"Duplicate"}}, {ID: "b/shared", Aliases: []string{"Duplicate"}}, {ID: "shadow", Aliases: []string{"shared", "plain"}}}
+	notes := []Note{{ID: "plain", Aliases: []string{"Root Alias", "Document.md"}}, {ID: "nested/unique", Aliases: []string{"Name", "Name", "ſigma", "Σ"}}, {ID: "a/shared", Aliases: []string{"Duplicate"}}, {ID: "b/shared", Aliases: []string{"Duplicate"}}, {ID: "shadow", Aliases: []string{"shared", "plain"}}}
 	for _, tt := range []struct{ target, id, reason string }{
 		{"plain", "plain", ""}, {"plain.md", "plain", ""}, {"a/shared.md", "a/shared", ""},
 		{"unique", "nested/unique", ""}, {"shared", "", "ambiguous"},
 		{"Name", "nested/unique", ""}, {"nAmE", "nested/unique", ""},
+		{"SIGMA", "nested/unique", ""}, {"ς", "nested/unique", ""},
 		{"Root Alias", "plain", ""}, {"DOCUMENT.md", "plain", ""}, {"Duplicate", "", "ambiguous"},
 		{"missing", "", "missing"}, {"missing/unique", "", "missing"},
 	} {

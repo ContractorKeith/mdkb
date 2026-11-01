@@ -139,12 +139,13 @@ func (i *Index) Broken(ctx context.Context) (Broken, error) {
 		return result, Error(err)
 	}
 	defer rows.Close()
+	resolver := kb.NewResolver(notes)
 	for rows.Next() {
 		var l BrokenLink
 		if err := rows.Scan(&l.From, &l.Target, &l.Line); err != nil {
 			return result, Error(err)
 		}
-		_, l.Reason = kb.ResolveLink(l.Target, notes)
+		_, l.Reason = resolver.ResolveLink(l.Target)
 		result.Broken = append(result.Broken, l)
 	}
 	result.Truncated = result.Total > len(result.Broken)
