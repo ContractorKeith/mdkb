@@ -1,0 +1,4 @@
+/mdkb
+/dist/
+*.db
+.DS_Store
