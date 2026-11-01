@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-v0.1.0 tagged — 2026-11-01: M0–M6 shipped; skeptic round 1 (#15–#23) fixed in #24. Open: real-model semantic eval on the Mac Studio (needs Ollama), tap formula sha256 fill after the release assets exist.
+v0.1.0 released — 2026-11-01: M0–M6 shipped, skeptic round 1 (#15–#23) fixed in #24, Homebrew tap published, real-model semantic eval done on the Mac Studio (hybrid 0.90/0.9067 vs keyword 0.70/0.70). Next: post-v1 backlog in docs/PLAN.md §3 Later rows.
 
 ## Commands
 ```bash

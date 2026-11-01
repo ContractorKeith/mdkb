@@ -58,11 +58,21 @@ and per-query results. Compare hybrid hit@3 and MRR with keyword 0.7000/0.7000;
 investigate regressions before claiming M5's live ranking acceptance is met.
 Use --force when repeating embedding with changed model weights under the same name.
 
-> **TODO: run on Mac Studio with nomic-embed-text**
->
-> Semantic hit@3 / MRR: pending.
->
-> Hybrid hit@3 / MRR: pending.
->
-> Hybrid ranking acceptance remains unverified until this block is replaced
-> with measured results. No real-model improvement is claimed by the fake tests.
+## Mac Studio real-model results — 2026-11-01
+
+Mac Studio (`Mac14,13`, macOS 26.6, arm64, Go 1.27.3), Ollama 0.40.13,
+`nomic-embed-text` 137M F16, digest
+`0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f`, mdkb at
+`f357ec3` (v0.1.0). Fresh fixture copy: `embed` stored 22 notes / 23 chunks in 1.1 s.
+
+| Mode | Hit@3 | MRR |
+|---|---:|---:|
+| keyword | 0.7000 | 0.7000 |
+| semantic | 0.9000 | 0.9067 |
+| hybrid | 0.9000 | 0.9067 |
+
+Hybrid is above the keyword baseline on both metrics, so the M5 acceptance is met.
+The two no-overlap paraphrases "espresso shop" and "damaged YAML recovery" now rank
+their note first; "isolated document" still misses (the orphan sits at rank 15 for
+the real model too). Repeat with `./mdkb eval --json` after any change to chunking,
+the model or the fixture, and update this table.

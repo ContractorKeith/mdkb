@@ -1,6 +1,6 @@
 # mdkb — Build Plan
 
-Status: v0.1.0 tagged 2026-11-01 (M0–M6, skeptic round 1 fixed). Real-model semantic eval on the Mac Studio still pending. Written after reading
+Status: v0.1.0 released 2026-11-01 (M0–M6, skeptic round 1 fixed, real-model semantic eval met). Written after reading
 [devjarus/personal-knowledge-base](https://github.com/devjarus/personal-knowledge-base),
 [ILDaviz/lyra-tui](https://github.com/ILDaviz/lyra-tui) (archived 2026-10-13) and
 [sazardev/shiki](https://github.com/sazardev/shiki).

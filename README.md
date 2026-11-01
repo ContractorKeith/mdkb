@@ -5,7 +5,7 @@ FTS5 keyword search, opt-in local embeddings, Obsidian-style wikilinks and backl
 git-committed agent writes. Your files stay the source of truth.
 
 **Status:** v0.1.0 released 2026-11-01 after a two-platform skeptic round (#15–#23 fixed).
-Semantic search is opt-in; its real-model evaluation on the Mac Studio is still pending.
+Semantic search is opt-in; with Ollama and `nomic-embed-text`, hybrid search scored hit@3 0.90 / MRR 0.91 against a 0.70 / 0.70 keyword baseline on the fixture ([details](docs/search-eval.md)).
 See [the plan](docs/PLAN.md) and the [changelog](CHANGELOG.md).
 
 ## Install
