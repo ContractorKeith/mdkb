@@ -44,7 +44,7 @@ func (s *stringList) UnmarshalYAML(n *yaml.Node) error {
 
 // Parse removes optional frontmatter, retaining the Markdown body verbatim.
 func Parse(path string, raw []byte) (Note, error) {
-	n := Note{ID: strings.TrimSuffix(filepath.ToSlash(path), ".md"), Path: filepath.ToSlash(path), Tags: []string{}, Aliases: []string{}, Body: string(raw)}
+	n := Note{ID: CanonicalID(strings.TrimSuffix(filepath.ToSlash(path), ".md")), Path: filepath.ToSlash(path), Tags: []string{}, Aliases: []string{}, Body: string(raw)}
 	lines := strings.SplitAfter(string(raw), "\n")
 	if len(lines) > 0 && strings.TrimSpace(lines[0]) == "---" {
 		end := -1
@@ -85,7 +85,10 @@ func Parse(path string, raw []byte) (Note, error) {
 		}
 	}
 	if n.Title == "" {
-		n.Title = strings.TrimSuffix(filepath.Base(path), ".md")
+		n.Title = CanonicalID(strings.TrimSuffix(filepath.Base(path), ".md"))
+	}
+	for i := range n.Aliases {
+		n.Aliases[i] = CanonicalID(n.Aliases[i])
 	}
 	return n, nil
 }

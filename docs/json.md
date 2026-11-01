@@ -241,3 +241,6 @@ Each result contains per-query metrics and their means. Hit@3 is binary (any
 relevant ID in the first three); MRR is reciprocal rank of the first relevant
 ID within the top 50. Expected IDs are relevance judgments, not a required
 ordering. See [the evaluation procedure](search-eval.md).
+
+Note IDs, basenames, aliases and link targets compare after NFC Unicode normalization.
+Public IDs use NFC; file paths retain their on-disk spelling.

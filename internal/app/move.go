@@ -12,6 +12,7 @@ import (
 )
 
 func Move(ctx context.Context, idx *index.Index, root, old, new string, dry bool) (kb.MoveResult, string, error) {
+	old, new = kb.CanonicalID(old), kb.CanonicalID(new)
 	// Validate before querying so invalid IDs are refused writes.
 	if err := kb.PreviewWrite(root, new, "create"); err != nil {
 		return kb.MoveResult{}, "", err
@@ -60,10 +61,10 @@ func Move(ctx context.Context, idx *index.Index, root, old, new string, dry bool
 	if err := idx.Sync(ctx, root, false); err != nil {
 		return plan.Result, "", fmt.Errorf("notes moved but reindex failed: %w", err)
 	}
-	paths := []string{old + ".md", new + ".md"}
+	paths := []string{plan.OldPath, plan.NewPath}
 	for _, change := range plan.Changes[1:] {
 		if change.ID != old {
-			paths = append(paths, change.ID+".md")
+			paths = append(paths, change.Path)
 		}
 	}
 	message := fmt.Sprintf("mdkb: mv %s -> %s (%d links rewritten)", old, new, plan.Result.Total)

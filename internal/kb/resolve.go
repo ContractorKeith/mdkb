@@ -24,6 +24,7 @@ func NewResolver(notes []Note) *Resolver {
 		}
 	}
 	for _, n := range notes {
+		n.ID = CanonicalID(n.ID)
 		r.ids[n.ID] = true
 		add(r.basenames, path.Base(n.ID), n.ID)
 		for _, alias := range n.Aliases {
@@ -43,12 +44,12 @@ func foldAlias(s string) string {
 			}
 		}
 		return smallest
-	}, s)
+	}, CanonicalID(s))
 }
 
 // ResolveLink tries exact ID, unique basename, then unique case-insensitive alias.
 func (r *Resolver) ResolveLink(target string) (id, reason string) {
-	target = strings.TrimSpace(target)
+	target = CanonicalID(strings.TrimSpace(target))
 	if r.ids[target] {
 		return target, ""
 	}

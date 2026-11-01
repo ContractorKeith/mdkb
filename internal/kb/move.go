@@ -21,13 +21,15 @@ type MoveResult struct {
 	CommitError string      `json:"-"`
 }
 type MovePlan struct {
-	Result  MoveResult
-	Changes []MoveChange
+	OldPath, NewPath string
+	Result           MoveResult
+	Changes          []MoveChange
 }
-type MoveChange struct{ ID, Before, After string }
+type MoveChange struct{ ID, Path, Before, After string }
 
 // PlanMove validates every affected path before any mutation.
 func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
+	old, new = CanonicalID(old), CanonicalID(new)
 	plan := MovePlan{Result: MoveResult{Old: old, New: new, Rewritten: []Rewritten{}}}
 	if ValidateID(old, false) != nil || ValidateID(new, true) != nil {
 		return plan, refuse(fmt.Errorf("invalid note id"))
@@ -41,7 +43,12 @@ func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
 	if err := PreviewWrite(root, new, "create"); err != nil {
 		return plan, err
 	}
-	_, raw, err := Read(root, old)
+	original, raw, err := Read(root, old)
+	if err != nil {
+		return plan, err
+	}
+	plan.OldPath = original.Path
+	plan.NewPath, err = notePath(root, new)
 	if err != nil {
 		return plan, err
 	}
@@ -78,11 +85,11 @@ func PlanMove(root, old, new string, sources []string) (MovePlan, error) {
 		if !strings.HasSuffix(replacement, "\n") {
 			replacement += "\n"
 		}
-		plan.Changes = append(plan.Changes, MoveChange{id, content, replacement})
+		plan.Changes = append(plan.Changes, MoveChange{id, note.Path, content, replacement})
 		plan.Result.Rewritten = append(plan.Result.Rewritten, Rewritten{id, count})
 		plan.Result.Total += count
 	}
-	plan.Changes = append([]MoveChange{{old, raw, raw}}, plan.Changes...)
+	plan.Changes = append([]MoveChange{{old, original.Path, raw, raw}}, plan.Changes...)
 	return plan, nil
 }
 

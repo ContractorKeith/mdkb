@@ -10,6 +10,7 @@ import (
 
 // Read resolves one ID without traversing unrelated notes. Child symlinks are refused.
 func Read(root, id string) (Note, string, error) {
+	id = CanonicalID(id)
 	refused := func() (Note, string, error) { return Note{}, "", NoteNotFound(id) }
 	failed := func(err error) (Note, string, error) {
 		if errors.Is(err, os.ErrNotExist) || errors.Is(err, errUnsafeNote) || errors.Is(err, syscall.ELOOP) {
@@ -35,7 +36,11 @@ func Read(root, id string) (Note, string, error) {
 		return failed(err)
 	}
 	defer dir.Close()
-	raw, stat, err := readNoteFile(dir, filepath.ToSlash(rel))
+	rel, err = resolveNotePath(dir, filepath.ToSlash(rel))
+	if err != nil {
+		return failed(err)
+	}
+	raw, stat, err := readNoteFile(dir, rel)
 	if err != nil {
 		return failed(err)
 	}

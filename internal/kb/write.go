@@ -23,6 +23,7 @@ type WriteResult struct {
 
 // Write atomically publishes a note; cache updates belong to the application layer.
 func Write(root, id, content, mode string) (WriteResult, error) {
+	id = CanonicalID(id)
 	writeMu.Lock()
 	defer writeMu.Unlock()
 	result, err := write(root, id, content, mode)
@@ -51,7 +52,11 @@ func write(root, id, content, mode string) (WriteResult, error) {
 		return WriteResult{}, err
 	}
 	defer func() { dir.Close() }()
-	parts := strings.Split(id, "/")
+	rel, err := resolveNotePath(dir, id+".md")
+	if err != nil {
+		return WriteResult{}, err
+	}
+	parts := strings.Split(strings.TrimSuffix(rel, ".md"), "/")
 	// Pin each directory handle so replacement by a symlink cannot redirect a write.
 	for _, part := range parts[:len(parts)-1] {
 		stat, err := dir.Lstat(part)
@@ -109,7 +114,7 @@ func write(root, id, content, mode string) (WriteResult, error) {
 			return WriteResult{}, err
 		}
 		if string(raw) == content {
-			return WriteResult{ID: id, Path: id + ".md", Bytes: len(content), Mode: mode}, nil
+			return WriteResult{ID: id, Path: rel, Bytes: len(content), Mode: mode}, nil
 		}
 	}
 	temp := fmt.Sprintf(".mdkb-%x.tmp", randomBytes())
@@ -138,7 +143,7 @@ func write(root, id, content, mode string) (WriteResult, error) {
 	if err != nil {
 		return WriteResult{}, err
 	}
-	return WriteResult{ID: id, Path: id + ".md", Bytes: len(content), Mode: mode, Changed: true}, nil
+	return WriteResult{ID: id, Path: rel, Bytes: len(content), Mode: mode, Changed: true}, nil
 }
 
 func randomBytes() []byte {
