@@ -19,7 +19,7 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 	}
 	defer tx.Rollback()
 	if full {
-		if _, err = tx.ExecContext(ctx, `DROP TRIGGER notes_ai; DROP TRIGGER notes_ad; DROP TRIGGER notes_au; DROP TABLE notes_fts; DROP TABLE tags; DROP TABLE notes;`+schema); err != nil {
+		if _, err = tx.ExecContext(ctx, `DROP TRIGGER notes_ai; DROP TRIGGER notes_ad; DROP TRIGGER notes_au; DROP TABLE notes_fts; DROP TABLE links; DROP TABLE link_sources; DROP TABLE tags; DROP TABLE notes;`+schema); err != nil {
 			return Error(err)
 		}
 	}
@@ -46,8 +46,15 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 	for _, n := range notes {
 		s, exists := old[n.Path]
 		delete(old, n.Path)
-		if exists && s.mtime == n.MTime && s.size == n.Size {
+		var scanned int
+		if err := tx.QueryRowContext(ctx, "SELECT count(*) FROM link_sources WHERE note_id=?", n.ID).Scan(&scanned); err != nil {
+			return Error(err)
+		}
+		if exists && s.mtime == n.MTime && s.size == n.Size && scanned != 0 {
 			continue
+		}
+		if err := replaceLinks(ctx, tx, n); err != nil {
+			return Error(err)
 		}
 		aliases, _ := json.Marshal(n.Aliases)
 		tags, _ := json.Marshal(n.Tags)
@@ -65,12 +72,21 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 		}
 	}
 	for path := range old {
+		if _, err = tx.ExecContext(ctx, "DELETE FROM links WHERE from_id=(SELECT id FROM notes WHERE path=?)", path); err != nil {
+			return Error(err)
+		}
+		if _, err = tx.ExecContext(ctx, "DELETE FROM link_sources WHERE note_id=(SELECT id FROM notes WHERE path=?)", path); err != nil {
+			return Error(err)
+		}
 		if _, err = tx.ExecContext(ctx, "DELETE FROM tags WHERE note_id=(SELECT id FROM notes WHERE path=?)", path); err != nil {
 			return Error(err)
 		}
 		if _, err = tx.ExecContext(ctx, "DELETE FROM notes WHERE path=?", path); err != nil {
 			return Error(err)
 		}
+	}
+	if err := resolveLinks(ctx, tx, notes); err != nil {
+		return Error(err)
 	}
 	return Error(tx.Commit())
 }

@@ -1,0 +1,1 @@
+{"broken":[{"from":"ambiguous-source","target":"shared","line":2,"reason":"ambiguous"},{"from":"broken-source","target":"does-not-exist","line":2,"reason":"missing"},{"from":"broken-source","target":"missing/folder/note","line":3,"reason":"missing"}],"total":3,"truncated":false}

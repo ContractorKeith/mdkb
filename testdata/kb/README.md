@@ -18,7 +18,7 @@ Do not normalize the deliberate ambiguities or broken links.
 | headings.md | H1 and H2 anchor targets |
 | heading-source.md | Heading anchors, including anchor plus display alias |
 | embed-source.md | Note and heading embeds |
-| code-fences.md | Backtick and tilde fences containing ignored links; real link outside |
+| code-fences.md | Backtick and tilde fences and inline code containing ignored links; real link outside |
 | broken-source.md | Missing basename and missing explicit path |
 | ambiguous-source.md | Ambiguous basename and exact paths to both candidates |
 | projects/shared.md | First shared basename; alias; path link |

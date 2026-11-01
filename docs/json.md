@@ -8,7 +8,7 @@ over all root configuration. Unset and empty settings fall through.
 Successful --json output is one object and a newline on stdout:
 
 - version: {"version":"dev"} (release builds may inject a version).
-- info: {"problems":0,"indexed_notes":0,"index_path":"/absolute/cache/mdkb/<hash>.db","root":"/absolute/path","note_count":0,"initialized":true}.
+- info: {"links":0,"broken_links":0,"orphans":0,"problems":0,"indexed_notes":0,"index_path":"/absolute/cache/mdkb/<hash>.db","root":"/absolute/path","note_count":0,"initialized":true}.
   Counts regular *.md files recursively, excluding dot-directories and child symlinks; a symlink root is supported.
   An existing directory without the marker returns initialized:false with exit 0;
   uninitialized info is an inspector and never creates files (`indexed_notes:0`,
@@ -67,4 +67,45 @@ Invalid or unterminated frontmatter falls back to the raw file as the body,
 with title from H1 or filename and empty metadata. Notes remain readable and
 searchable. `ls --json` includes `problem` only on affected notes; `info` includes
 `problems`, the number of affected notes. Filesystem errors still fail reads.
-Wikilinks remain plain text in M1.
+
+## M2 commands
+
+All graph reads auto-sync. Link lines are one-based within the Markdown body,
+excluding successfully parsed frontmatter. Fenced code (backtick or tilde, using
+M1's title-fallback fence rule) and matched inline backtick spans are ignored.
+Links and embeds support optional heading and display alias together.
+Targets, headings and display aliases are trimmed; empty targets are ignored.
+
+Resolution stops at the first hit: exact note ID (with or without `.md`, using
+forward slashes), unique basename for a target without a folder, then unique
+case-insensitive frontmatter alias. Exact IDs and basenames are case-sensitive.
+Multiple basename matches are ambiguous and stop resolution before aliases;
+multiple alias matches are also ambiguous. Explicit paths do not fall back to
+a different folder's basename. Heading anchors are retained, not validated.
+Graph changes reconsider existing matches, so new ambiguity, removed targets and
+changed aliases are reflected without a full rebuild. M1 caches upgrade on sync.
+
+- `links <id>`:
+  `{"id":"welcome","links":[{"target":"plain","target_id":"plain","heading":"","alias":"","embed":false,"line":2,"resolved":true}]}`.
+  Links stay in body order. `target` is the trimmed target without the heading
+  or display alias; unresolved links have `target_id:null` and `resolved:false`.
+  Text prints the resolved ID or `(broken) target`, one per line.
+- `backlinks <id>`:
+  `{"id":"plain","backlinks":[{"from":"welcome","line":2,"alias":"","embed":false}]}`.
+  Includes each incoming occurrence, sorted by source ID, then line and body
+  order. Text prints source ID, line and display alias. Both ID commands require
+  an exact indexed ID (without `.md`); an unknown ID exits 2.
+- `orphans`:
+  `{"orphans":[{"id":"orphan","title":"Orphan"}],"total":1,"truncated":false}`.
+  Notes without incoming resolved links, sorted by ID. Embeds and self-links
+  count as incoming links.
+- `broken`:
+  `{"broken":[{"from":"broken-source","target":"does-not-exist","line":2,"reason":"missing"}],"total":1,"truncated":false}`.
+  Unresolved occurrences sorted by source ID, then line and body order.
+  Reason is `missing` or `ambiguous`. Text prints source, line, target and reason.
+  Orphans and broken reports cap at 50 rows, with total counting all matches.
+- `info` additionally includes `links`, `broken_links` and `orphans` integer
+  totals, independent of report caps. These are zero for uninitialized roots.
+
+All empty collections remain `[]`. Index rows store `kind` as `link` or `embed`,
+with nullable `target_id`; display aliases never influence resolution.
