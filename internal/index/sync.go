@@ -51,7 +51,7 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 		}
 		aliases, _ := json.Marshal(n.Aliases)
 		tags, _ := json.Marshal(n.Tags)
-		_, err = tx.ExecContext(ctx, `INSERT INTO notes(id,path,title,aliases,tags,created,updated,mtime,size,body) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET path=excluded.path,title=excluded.title,aliases=excluded.aliases,tags=excluded.tags,created=excluded.created,updated=excluded.updated,mtime=excluded.mtime,size=excluded.size,body=excluded.body`, n.ID, n.Path, n.Title, string(aliases), string(tags), n.Created, n.Updated, n.MTime, n.Size, n.Body)
+		_, err = tx.ExecContext(ctx, `INSERT INTO notes(id,path,title,aliases,tags,created,updated,mtime,size,body,problem) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET path=excluded.path,title=excluded.title,aliases=excluded.aliases,tags=excluded.tags,created=excluded.created,updated=excluded.updated,mtime=excluded.mtime,size=excluded.size,body=excluded.body,problem=excluded.problem`, n.ID, n.Path, n.Title, string(aliases), string(tags), n.Created, n.Updated, n.MTime, n.Size, n.Body, n.Problem)
 		if err != nil {
 			return Error(err)
 		}

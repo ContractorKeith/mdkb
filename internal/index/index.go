@@ -55,6 +55,10 @@ func Open(root string) (*Index, error) {
 		db.Close()
 		return nil, Error(err)
 	}
+	if err := idx.ensureProblemColumn(); err != nil {
+		db.Close()
+		return nil, Error(err)
+	}
 	return idx, nil
 }
 func (i *Index) Close() error { return i.db.Close() }
@@ -65,10 +69,20 @@ func (i *Index) Count(ctx context.Context) (int, error) {
 }
 
 const schema = `
-CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE, title TEXT NOT NULL, aliases TEXT NOT NULL, tags TEXT NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL, mtime INTEGER NOT NULL, size INTEGER NOT NULL, body TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE, title TEXT NOT NULL, aliases TEXT NOT NULL, tags TEXT NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL, mtime INTEGER NOT NULL, size INTEGER NOT NULL, body TEXT NOT NULL, problem TEXT NOT NULL DEFAULT '');
 CREATE TABLE IF NOT EXISTS tags (note_id TEXT NOT NULL, name TEXT NOT NULL, PRIMARY KEY(note_id,name));
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(title, body, content='notes', content_rowid='rowid');
 CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN INSERT INTO notes_fts(rowid,title,body) VALUES(new.rowid,new.title,new.body); END;
 CREATE TRIGGER IF NOT EXISTS notes_ad AFTER DELETE ON notes BEGIN INSERT INTO notes_fts(notes_fts,rowid,title,body) VALUES('delete',old.rowid,old.title,old.body); END;
 CREATE TRIGGER IF NOT EXISTS notes_au AFTER UPDATE ON notes BEGIN INSERT INTO notes_fts(notes_fts,rowid,title,body) VALUES('delete',old.rowid,old.title,old.body); INSERT INTO notes_fts(rowid,title,body) VALUES(new.rowid,new.title,new.body); END;
 `
+
+// Existing M1 caches predate problem reporting; their valid rows keep an empty problem.
+func (i *Index) ensureProblemColumn() error {
+	var name string
+	err := i.db.QueryRow("SELECT name FROM pragma_table_info('notes') WHERE name='problem'").Scan(&name)
+	if errors.Is(err, sql.ErrNoRows) {
+		_, err = i.db.Exec("ALTER TABLE notes ADD COLUMN problem TEXT NOT NULL DEFAULT ''")
+	}
+	return err
+}

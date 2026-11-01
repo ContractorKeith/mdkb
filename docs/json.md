@@ -8,7 +8,7 @@ over all root configuration. Unset and empty settings fall through.
 Successful --json output is one object and a newline on stdout:
 
 - version: {"version":"dev"} (release builds may inject a version).
-- info: {"indexed_notes":0,"index_path":"/absolute/cache/mdkb/<hash>.db","root":"/absolute/path","note_count":0,"initialized":true}.
+- info: {"problems":0,"indexed_notes":0,"index_path":"/absolute/cache/mdkb/<hash>.db","root":"/absolute/path","note_count":0,"initialized":true}.
   Counts regular *.md files recursively, excluding dot-directories and child symlinks; a symlink root is supported.
   An existing directory without the marker returns initialized:false with exit 0;
   uninitialized info is an inspector and never creates files (`indexed_notes:0`,
@@ -47,17 +47,24 @@ metadata are not a portable contract.
   Counts distinct notes per tag; sort by count descending, then name ascending.
 - `search <q> [--limit N]`:
   `{"hits":[{"id":"welcome","title":"Welcome","score":-0.5,"snippet":"[Welcome]"}]}`.
-  Default limit 50. FTS5 BM25 scores sort ascending (lower is better), then ID.
+  Default limit 50. FTS5 BM25 scores rank ascending (lower is better), then ID.
+  Public scores are rounded to 4 decimal places in `internal/search`, in both
+  JSON and text output; JSON numbers may omit trailing zeroes. Ranking uses
+  the original scores before rounding.
   Snippets bracket matches with `[` and `]`, using ` … ` for omissions.
   Invalid FTS expressions retry as a literal quoted phrase; no matches succeeds.
 - `cat <id>`:
   `{"id":"welcome","title":"Welcome","tags":["start"],"aliases":["Home"],"body":"# Welcome\n"}`.
   JSON body excludes YAML frontmatter. Human output is the exact raw file,
   including frontmatter. Missing IDs exit 2; IDs omit `.md` and use `/` separators.
-- `reindex [--full]`: `{"indexed_notes":21}` with `--json`.
+  Absolute/traversal IDs and child symlinks (including directory symlinks) are refused.
+- `reindex [--full]`: `{"indexed_notes":22}` with `--json`.
 
 Empty collections are `[]`, never null. Limits must be positive integers.
 Frontmatter supports title, tags (a list or one string), aliases, created and
 updated. Title falls back to the first H1 outside code fences, then the filename.
-Invalid or unterminated frontmatter reports an error without partial sync.
+Invalid or unterminated frontmatter falls back to the raw file as the body,
+with title from H1 or filename and empty metadata. Notes remain readable and
+searchable. `ls --json` includes `problem` only on affected notes; `info` includes
+`problems`, the number of affected notes. Filesystem errors still fail reads.
 Wikilinks remain plain text in M1.

@@ -101,3 +101,33 @@ func TestCacheFallback(t *testing.T) {
 		t.Fatal(idx.Path)
 	}
 }
+
+func TestUpgradeCacheProblemColumn(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	root := t.TempDir()
+	idx, err := Open(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := idx.db.Exec("ALTER TABLE notes DROP COLUMN problem"); err != nil {
+		t.Fatal(err)
+	}
+	if err := idx.Close(); err != nil {
+		t.Fatal(err)
+	}
+	idx, err = Open(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer idx.Close()
+	if err := os.WriteFile(filepath.Join(root, "bad.md"), []byte("---\ntitle: unfinished\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := idx.Sync(context.Background(), root, false); err != nil {
+		t.Fatal(err)
+	}
+	listing, err := idx.List(context.Background(), "", 50)
+	if err != nil || len(listing.Notes) != 1 || listing.Notes[0].Problem == "" {
+		t.Fatalf("upgraded listing: %+v %v", listing, err)
+	}
+}

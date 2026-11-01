@@ -114,7 +114,7 @@ func newRoot() *cobra.Command {
 				}
 				info.IndexPath = idx.Path
 			}
-			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath)
+			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems)
 		},
 	})
 	addReads(cmd, &root, output)

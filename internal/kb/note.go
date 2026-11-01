@@ -2,8 +2,6 @@ package kb
 
 import (
 	"fmt"
-	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -21,6 +19,7 @@ type Note struct {
 	Updated string   `json:"updated"`
 	MTime   int64    `json:"mtime"`
 	Size    int64    `json:"size"`
+	Problem string   `json:"problem,omitempty"`
 	Body    string   `json:"body"`
 }
 
@@ -56,26 +55,12 @@ func Parse(path string, raw []byte) (Note, error) {
 			}
 		}
 		if end < 0 {
-			return n, fmt.Errorf("%s: unterminated frontmatter", path)
+			n.Problem = "unterminated frontmatter"
+		} else if err := parseMetadata(&n, strings.Join(lines[1:end], "")); err != nil {
+			n.Problem = fmt.Sprintf("invalid frontmatter: %v", err)
+		} else {
+			n.Body = strings.Join(lines[end+1:], "")
 		}
-		var meta struct {
-			Title   string
-			Tags    stringList
-			Aliases stringList
-			Created string
-			Updated string
-		}
-		if err := yaml.Unmarshal([]byte(strings.Join(lines[1:end], "")), &meta); err != nil {
-			return n, fmt.Errorf("%s: %w", path, err)
-		}
-		n.Title, n.Created, n.Updated = meta.Title, meta.Created, meta.Updated
-		if meta.Tags != nil {
-			n.Tags = meta.Tags
-		}
-		if meta.Aliases != nil {
-			n.Aliases = meta.Aliases
-		}
-		n.Body = strings.Join(lines[end+1:], "")
 	}
 	if n.Title == "" {
 		fence := byte(0)
@@ -105,60 +90,24 @@ func Parse(path string, raw []byte) (Note, error) {
 	return n, nil
 }
 
-// Walk skips dot-directories and child symlinks, matching Info's file selection.
-func Walk(root string) ([]Note, error) {
-	walkRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		return nil, err
+// parseMetadata applies metadata only after the complete block decodes.
+func parseMetadata(n *Note, block string) error {
+	var meta struct {
+		Title   string
+		Tags    stringList
+		Aliases stringList
+		Created string
+		Updated string
 	}
-	notes := []Note{}
-	err = filepath.WalkDir(walkRoot, func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.IsDir() {
-			if path != walkRoot && strings.HasPrefix(entry.Name(), ".") {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if !entry.Type().IsRegular() || filepath.Ext(path) != ".md" {
-			return nil
-		}
-		stat, err := entry.Info()
-		if err != nil {
-			return err
-		}
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		rel, err := filepath.Rel(walkRoot, path)
-		if err != nil {
-			return err
-		}
-		note, err := Parse(rel, raw)
-		if err != nil {
-			return err
-		}
-		note.MTime, note.Size = stat.ModTime().UnixNano(), stat.Size()
-		notes = append(notes, note)
-		return nil
-	})
-	return notes, err
-}
-
-// Read returns the raw file for an ID selected from the safe walk.
-func Read(root, id string) (Note, string, error) {
-	notes, err := Walk(root)
-	if err != nil {
-		return Note{}, "", err
+	if err := yaml.Unmarshal([]byte(block), &meta); err != nil {
+		return err
 	}
-	for _, n := range notes {
-		if n.ID == id {
-			raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(n.Path)))
-			return n, string(raw), err
-		}
+	n.Title, n.Created, n.Updated = meta.Title, meta.Created, meta.Updated
+	if meta.Tags != nil {
+		n.Tags = meta.Tags
 	}
-	return Note{}, "", fmt.Errorf("%s: %w", id, os.ErrNotExist)
+	if meta.Aliases != nil {
+		n.Aliases = meta.Aliases
+	}
+	return nil
 }

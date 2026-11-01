@@ -31,8 +31,9 @@ func TestParse(t *testing.T) {
 		}
 	}
 	for _, raw := range []string{"---\ntitle: [invalid]\n---\n", "---\ntitle: missing end\n"} {
-		if _, err := kb.Parse("bad.md", []byte(raw)); err == nil {
-			t.Fatal("expected parse error")
+		n, err := kb.Parse("bad.md", []byte(raw))
+		if err != nil || n.Problem == "" || n.Body != raw || n.Title != "bad" || len(n.Tags) != 0 || len(n.Aliases) != 0 {
+			t.Fatalf("fallback: %+v, %v", n, err)
 		}
 	}
 }

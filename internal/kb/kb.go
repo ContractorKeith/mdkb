@@ -15,6 +15,7 @@ var ErrWriteRefused = errors.New("write refused")
 
 // Details is the stable info response, including for an uninitialized directory.
 type Details struct {
+	Problems     int    `json:"problems"`
 	IndexedNotes int    `json:"indexed_notes"`
 	IndexPath    string `json:"index_path"`
 	Root         string `json:"root"`
@@ -125,6 +126,14 @@ func Info(root string) (Details, error) {
 		}
 		if entry.Type().IsRegular() && filepath.Ext(entry.Name()) == ".md" {
 			result.NoteCount++
+			raw, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			note, _ := Parse(entry.Name(), raw)
+			if note.Problem != "" {
+				result.Problems++
+			}
 		}
 		return nil
 	})

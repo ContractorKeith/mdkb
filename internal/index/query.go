@@ -7,9 +7,10 @@ import (
 )
 
 type Summary struct {
-	ID    string   `json:"id"`
-	Title string   `json:"title"`
-	Tags  []string `json:"tags"`
+	Problem string   `json:"problem,omitempty"`
+	ID      string   `json:"id"`
+	Title   string   `json:"title"`
+	Tags    []string `json:"tags"`
 }
 type Listing struct {
 	Notes     []Summary `json:"notes"`
@@ -27,7 +28,7 @@ func (i *Index) List(ctx context.Context, tag string, limit int) (Listing, error
 	if err := i.db.QueryRowContext(ctx, "SELECT count(*) FROM notes"+filter, tag, tag).Scan(&result.Total); err != nil {
 		return result, Error(err)
 	}
-	rows, err := i.db.QueryContext(ctx, "SELECT id,title,tags FROM notes"+filter+" ORDER BY id LIMIT ?", tag, tag, limit)
+	rows, err := i.db.QueryContext(ctx, "SELECT id,title,tags,problem FROM notes"+filter+" ORDER BY id LIMIT ?", tag, tag, limit)
 	if err != nil {
 		return result, Error(err)
 	}
@@ -35,7 +36,7 @@ func (i *Index) List(ctx context.Context, tag string, limit int) (Listing, error
 	for rows.Next() {
 		var n Summary
 		var tags string
-		if err := rows.Scan(&n.ID, &n.Title, &tags); err != nil {
+		if err := rows.Scan(&n.ID, &n.Title, &tags, &n.Problem); err != nil {
 			return result, Error(err)
 		}
 		if err := json.Unmarshal([]byte(tags), &n.Tags); err != nil {

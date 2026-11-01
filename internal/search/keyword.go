@@ -3,6 +3,7 @@ package search
 
 import (
 	"context"
+	"math"
 
 	"github.com/ContractorKeith/mdkb/internal/index"
 )
@@ -23,7 +24,7 @@ func (s Search) Keyword(ctx context.Context, q string, limit int) ([]Hit, error)
 	}
 	hits := []Hit{}
 	for _, m := range matches {
-		hits = append(hits, Hit{m.ID, m.Title, m.Score, m.Snippet})
+		hits = append(hits, Hit{m.ID, m.Title, math.Round(m.Score*1e4) / 1e4, m.Snippet})
 	}
 	return hits, nil
 }
