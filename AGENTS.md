@@ -12,6 +12,7 @@ v0.1.0 released — 2026-11-01: M0–M6 shipped, skeptic round 1 (#15–#23) fix
 
 ## Commands
 ```bash
+bash scripts/accept.sh          # the acceptance: gate, build, goldens, live checks; CI runs this
 go build ./cmd/mdkb && ./mdkb version
 go test ./...
 test -z "$(gofmt -l .)" && go vet ./... && staticcheck ./...

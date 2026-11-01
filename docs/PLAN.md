@@ -141,7 +141,7 @@ Each milestone is one GitHub issue, one branch, one PR, one T3 thread in its own
 
 ## 8. Acceptance checks
 
-Run from a clean clone on macOS and Linux:
+`scripts/accept.sh` runs all of these from a clean clone; CI runs it on Linux and macOS. The list, for reading:
 
 1. `go test ./...` green, `gofmt -l .` empty, `go vet ./...` and `staticcheck ./...` clean.
 2. `mdkb init /tmp/kb && cp -r testdata/kb/* /tmp/kb && mdkb --root /tmp/kb reindex` then
