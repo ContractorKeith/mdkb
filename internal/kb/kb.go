@@ -14,6 +14,11 @@ var ErrWriteRefused = errors.New("write refused")
 
 // Details is the stable info response, including for an uninitialized directory.
 type Details struct {
+	Embeddings struct {
+		Model  string `json:"model"`
+		Notes  int    `json:"notes"`
+		Chunks int    `json:"chunks"`
+	} `json:"embeddings"`
 	Links        int    `json:"links" jsonschema:"links"`
 	BrokenLinks  int    `json:"broken_links" jsonschema:"broken links"`
 	Orphans      int    `json:"orphans" jsonschema:"orphans"`

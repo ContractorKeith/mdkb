@@ -41,6 +41,11 @@ func Info(ctx context.Context, root string) (kb.Details, error) {
 		return kb.Details{}, err
 	}
 	info, err := kb.Info(path)
+	cfg, cfgErr := config.Semantic()
+	if cfgErr != nil {
+		return info, cfgErr
+	}
+	info.Embeddings.Model = cfg.Model
 	if err != nil || !info.Initialized {
 		return info, err
 	}
@@ -55,5 +60,12 @@ func Info(ctx context.Context, root string) (kb.Details, error) {
 	}
 	info.IndexPath = idx.Path
 	info.Links, info.BrokenLinks, info.Orphans, err = idx.LinkCounts(ctx)
+	if err == nil {
+		counts, e := idx.EmbeddingCounts(ctx, cfg.Model)
+		err = e
+		info.Embeddings.Model = counts.Model
+		info.Embeddings.Notes = counts.Notes
+		info.Embeddings.Chunks = counts.Chunks
+	}
 	return info, err
 }

@@ -20,7 +20,7 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 	}
 	defer tx.Rollback()
 	if full {
-		if _, err = tx.ExecContext(ctx, `DROP TRIGGER notes_ai; DROP TRIGGER notes_ad; DROP TRIGGER notes_au; DROP TABLE notes_fts; DROP TABLE links; DROP TABLE link_sources; DROP TABLE tags; DROP TABLE notes;`+schema); err != nil {
+		if _, err = tx.ExecContext(ctx, `DROP TRIGGER embedding_delete; DROP TRIGGER embedding_update; DROP TABLE embeddings; DROP TABLE embedding_state; DROP TRIGGER notes_ai; DROP TRIGGER notes_ad; DROP TRIGGER notes_au; DROP TABLE notes_fts; DROP TABLE links; DROP TABLE link_sources; DROP TABLE tags; DROP TABLE notes;`+schema); err != nil {
 			return Error(err)
 		}
 	}

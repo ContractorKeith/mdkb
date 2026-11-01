@@ -46,7 +46,7 @@ metadata are not a portable contract.
 - `tags`: `{"tags":[{"name":"start","count":1}]}`.
   Counts distinct notes per tag; sort by count descending, then name ascending.
 - `search <q> [--limit N]`:
-  `{"hits":[{"id":"welcome","title":"Welcome","score":-0.5,"snippet":"[Welcome]"}]}`.
+  `{"mode":"keyword","hits":[{"id":"welcome","title":"Welcome","score":-0.5,"snippet":"[Welcome]"}]}`.
   Default limit 50. FTS5 BM25 scores rank ascending (lower is better), then ID.
   Public scores are rounded to 4 decimal places in `internal/search`, in both
   JSON and text output; JSON numbers may omit trailing zeroes. Ranking uses
@@ -181,3 +181,63 @@ Commit failure preserves the write, prints a diagnostic to stderr, returns
 commit:false and exits 0. Reindex failures remain errors after the file write.
 The application layer owns reindex/commit orchestration to avoid a kb/index
 dependency cycle; low-level `kb.Write` handles atomic file publication.
+
+## Semantic search (M5)
+
+User configuration (the defaults shown here require no Ollama installation):
+
+```toml
+[semantic]
+enabled = false
+url = "http://localhost:11434"
+model = "nomic-embed-text"
+timeout_seconds = 30
+```
+
+`MDKB_SEMANTIC=0/1`, `MDKB_OLLAMA_URL`, and `MDKB_EMBED_MODEL`
+override the corresponding fields. Timeout must be positive. The app layer
+passes these settings to storage/search; those packages never read configuration.
+
+`search <q> [--keyword | --semantic] [--limit N]` returns
+`{"mode":"keyword","hits":[]}`. Automatic mode is hybrid only when enabled
+and at least one vector exists for the configured model; otherwise keyword.
+Forced semantic works even when automatic semantic is disabled. Missing vectors
+or unavailable Ollama in forced semantic mode exits 4. Automatic hybrid falls
+back to keyword with one stderr line:
+`semantic unavailable (<reason>); keyword only`. The returned mode is keyword.
+
+Semantic scores are cosine similarity, descending, with each note scored by
+its best chunk; snippets contain that chunk's first 200 Unicode characters.
+Chunks target 200 words with 40-word overlap, prefer paragraph boundaries,
+and prefix chunk zero with the note title. Hybrid takes the top 50 from each
+search and sums `1 / (60 + rank)` with one-based ranks. Both modes break ties
+by ID and round public scores to four decimals after ranking.
+Hybrid hits additionally contain `"sources":["keyword","semantic"]`, or a
+one-element array for a hit found by only one source. Keyword and semantic
+hits omit sources. Empty hits remain `[]`.
+
+`info` and MCP `get_info` add
+`"embeddings":{"model":"nomic-embed-text","notes":0,"chunks":0}`.
+Counts include only the configured model and are zero for uninitialized roots.
+
+`embed [--model M] [--force] [--dry-run]` returns with `--json`:
+`{"model":"nomic-embed-text","notes_embedded":22,"chunks":22,"skipped":0,"duration_ms":123}`.
+It embeds missing/stale notes, checking model, mtime and size. Force redoes all.
+Dry-run adds `"dry_run":true` and reports prospective counts without HTTP or
+vector writes. Progress goes to stderr every 25 embedded notes.
+Unavailable Ollama exits 4 without success JSON; each note is stored atomically.
+Completed earlier notes remain if a later note fails; no partial note is stored.
+Requests batch at most 16 chunks, with no retries. Changed/deleted notes lose
+their vectors during sync; `reindex --full` clears every model's vectors.
+
+`eval [--queries FILE] [--mode keyword|semantic|hybrid]` defaults to the bundled
+fixture judgments and all available modes, regardless of the automatic-search
+enabled setting. Without vectors it evaluates keyword only; unavailable Ollama
+omits remaining semantic modes with a stderr diagnostic. Explicit modes fail
+rather than fall back. Input is an array of `{query, expected:[id,...]}`.
+`--json` returns:
+`{"results":[{"mode":"keyword","queries":[{"query":"shared","hit_at_3":1,"mrr":1,"ids":["projects/shared","archive/shared","ambiguous-source"]}],"hit_at_3":1,"mrr":1}]}`.
+Each result contains per-query metrics and their means. Hit@3 is binary (any
+relevant ID in the first three); MRR is reciprocal rank of the first relevant
+ID within the top 50. Expected IDs are relevance judgments, not a required
+ordering. See [the evaluation procedure](search-eval.md).

@@ -1,0 +1,12 @@
+[
+ {"query":"shared","expected":["projects/shared","archive/shared","ambiguous-source"]},
+ {"query":"markdown","expected":["README","code-fences"]},
+ {"query":"orphan","expected":["orphan","README"]},
+ {"query":"frontmatter","expected":["multiline-tags","h1-only","plain"]},
+ {"query":"anchor","expected":["headings","README"]},
+ {"query":"capture","expected":["00-Inbox/capture","README"]},
+ {"query":"ambiguous","expected":["ambiguous-source","README"]},
+ {"query":"espresso shop","expected":["spaces and unicode"]},
+ {"query":"isolated document","expected":["orphan"]},
+ {"query":"damaged YAML recovery","expected":["bad-frontmatter"]}
+]

@@ -9,6 +9,7 @@ import (
 
 	"github.com/ContractorKeith/mdkb/internal/app"
 	"github.com/ContractorKeith/mdkb/internal/config"
+	"github.com/ContractorKeith/mdkb/internal/embed"
 	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
 	"github.com/spf13/cobra"
@@ -99,6 +100,7 @@ func newRoot() *cobra.Command {
 			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\nLinks: %d\nBroken links: %d\nOrphans: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems, info.Links, info.BrokenLinks, info.Orphans)
 		},
 	})
+	addSemantic(cmd, &root, output)
 	addReads(cmd, &root, output)
 	addLinks(cmd, &root, output)
 	addMCP(cmd, &root)
@@ -108,7 +110,10 @@ func newRoot() *cobra.Command {
 
 // Map domain failures to the CLI contract; unclassified errors are usage/runtime errors.
 func exitCode(err error) int {
+	var unavailable *embed.ErrUnavailable
 	switch {
+	case errors.As(err, &unavailable):
+		return 4
 	case err == nil:
 		return 0
 	case errors.Is(err, errUninitialized):
