@@ -90,7 +90,7 @@ func write(root, id, content, mode string) (WriteResult, error) {
 		return WriteResult{}, os.ErrNotExist
 	}
 	if mode == "append" {
-		raw, err := dir.ReadFile(name)
+		raw, _, err := readNoteFile(dir, name)
 		if err != nil {
 			return WriteResult{}, err
 		}
@@ -104,7 +104,7 @@ func write(root, id, content, mode string) (WriteResult, error) {
 		content += "\n"
 	}
 	if exists {
-		raw, err := dir.ReadFile(name)
+		raw, _, err := readNoteFile(dir, name)
 		if err != nil {
 			return WriteResult{}, err
 		}

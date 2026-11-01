@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // Read resolves one ID without traversing unrelated notes. Child symlinks are refused.
 func Read(root, id string) (Note, string, error) {
 	refused := func() (Note, string, error) { return Note{}, "", NoteNotFound(id) }
 	failed := func(err error) (Note, string, error) {
-		if errors.Is(err, os.ErrNotExist) {
+		if errors.Is(err, os.ErrNotExist) || errors.Is(err, errUnsafeNote) || errors.Is(err, syscall.ELOOP) {
 			return refused()
 		}
 		return Note{}, "", err
@@ -34,36 +35,11 @@ func Read(root, id string) (Note, string, error) {
 		return failed(err)
 	}
 	defer dir.Close()
-	parts := strings.Split(rel, string(filepath.Separator))
-	for i, part := range parts {
-		if i < len(parts)-1 && strings.HasPrefix(part, ".") {
-			return refused()
-		}
-		stat, err := dir.Lstat(filepath.Join(parts[:i+1]...))
-		if err != nil {
-			return failed(err)
-		}
-		if stat.Mode()&os.ModeSymlink != 0 {
-			return refused()
-		}
-		if i < len(parts)-1 {
-			if !stat.IsDir() {
-				return refused()
-			}
-		} else if !stat.Mode().IsRegular() {
-			return refused()
-		}
-	}
-	// Root.ReadFile also enforces containment if a component changes after validation.
-	raw, err := dir.ReadFile(rel)
+	raw, stat, err := readNoteFile(dir, filepath.ToSlash(rel))
 	if err != nil {
 		return failed(err)
 	}
 	n, err := Parse(rel, raw)
-	if err != nil {
-		return failed(err)
-	}
-	stat, err := dir.Stat(rel)
 	if err != nil {
 		return failed(err)
 	}
