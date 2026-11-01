@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-skeleton — planned 2026-11-01, no code yet. Milestones M0–M6 are GitHub issues.
+M0 done — 2026-11-01: CLI scaffold, init, config, info, CI, and fixture KB. M1–M6 remain.
 
 ## Commands
 ```bash
