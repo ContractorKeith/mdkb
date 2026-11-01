@@ -25,10 +25,13 @@ func validID(id string) bool {
 }
 
 type WriteResult struct {
-	ID    string `json:"id" jsonschema:"Note ID relative to root without .md"`
-	Path  string `json:"path" jsonschema:"Relative Markdown path"`
-	Bytes int    `json:"bytes" jsonschema:"Total bytes in the resulting file"`
-	Mode  string `json:"mode" jsonschema:"Applied write mode"`
+	Commit      bool   `json:"commit" jsonschema:"Whether the write committed successfully"`
+	Changed     bool   `json:"-" jsonschema:"-"`
+	CommitError string `json:"-" jsonschema:"-"`
+	ID          string `json:"id" jsonschema:"Note ID relative to root without .md"`
+	Path        string `json:"path" jsonschema:"Relative Markdown path"`
+	Bytes       int    `json:"bytes" jsonschema:"Total bytes in the resulting file"`
+	Mode        string `json:"mode" jsonschema:"Applied write mode"`
 }
 
 // Write atomically publishes a note; cache updates belong to the application layer.
@@ -113,6 +116,15 @@ func write(root, id, content, mode string) (WriteResult, error) {
 	if !strings.HasSuffix(content, "\n") {
 		content += "\n"
 	}
+	if exists {
+		raw, err := dir.ReadFile(name)
+		if err != nil {
+			return WriteResult{}, err
+		}
+		if string(raw) == content {
+			return WriteResult{ID: id, Path: id + ".md", Bytes: len(content), Mode: mode}, nil
+		}
+	}
 	temp := fmt.Sprintf(".mdkb-%x.tmp", randomBytes())
 	f, err := dir.OpenFile(temp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
@@ -139,7 +151,7 @@ func write(root, id, content, mode string) (WriteResult, error) {
 	if err != nil {
 		return WriteResult{}, err
 	}
-	return WriteResult{ID: id, Path: id + ".md", Bytes: len(content), Mode: mode}, nil
+	return WriteResult{ID: id, Path: id + ".md", Bytes: len(content), Mode: mode, Changed: true}, nil
 }
 
 func randomBytes() []byte {

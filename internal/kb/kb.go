@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -39,14 +38,14 @@ func initialize(path string, dryRun bool) error {
 	}
 	initialized, err := hasMarker(root)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrWriteRefused, err)
+		return fmt.Errorf("%w: %w", ErrWriteRefused, err)
 	}
 	if initialized {
 		return nil
 	}
 	entries, err := os.ReadDir(root)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("%w: %v", ErrWriteRefused, err)
+		return fmt.Errorf("%w: %w", ErrWriteRefused, err)
 	}
 	if len(entries) > 0 {
 		return fmt.Errorf("%w: %s is not empty and is not an mdkb KB", ErrWriteRefused, root)
@@ -57,12 +56,8 @@ func initialize(path string, dryRun bool) error {
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return refuse(err)
 	}
-	// Reuse an enclosing repository rather than creating a nested one.
-	probe := exec.Command("git", "-C", root, "rev-parse", "--show-toplevel")
-	if err := probe.Run(); err != nil {
-		if output, err := exec.Command("git", "-C", root, "init", "--quiet").CombinedOutput(); err != nil {
-			return refuse(fmt.Errorf("git init: %w: %s", err, strings.TrimSpace(string(output))))
-		}
+	if err := initGit(root); err != nil {
+		return refuse(err)
 	}
 	for _, dir := range []string{"00-Inbox", ".mdkb"} {
 		if err := os.MkdirAll(filepath.Join(root, dir), 0755); err != nil {
@@ -79,7 +74,7 @@ func refuse(err error) error {
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("%w: %v", ErrWriteRefused, err)
+	return fmt.Errorf("%w: %w", ErrWriteRefused, err)
 }
 
 func hasMarker(root string) (bool, error) {

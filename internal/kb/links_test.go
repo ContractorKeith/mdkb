@@ -11,20 +11,27 @@ func TestExtractLinks(t *testing.T) {
 		want       []LinkRef
 	}{
 		{"forms", "[[ plain ]] [[plain|display]] [[plain#Section]] [[plain#Section|display]] ![[plain]] ![[plain|display]] ![[plain#Section]] ![[plain#Section|display]]", []LinkRef{
-			{" plain ", "plain", "", "", false, 1}, {"plain|display", "plain", "", "display", false, 1},
-			{"plain#Section", "plain", "Section", "", false, 1}, {"plain#Section|display", "plain", "Section", "display", false, 1},
-			{"plain", "plain", "", "", true, 1}, {"plain|display", "plain", "", "display", true, 1},
-			{"plain#Section", "plain", "Section", "", true, 1}, {"plain#Section|display", "plain", "Section", "display", true, 1},
+			{" plain ", "plain", "", "", 0, 0, false, 1}, {"plain|display", "plain", "", "display", 0, 0, false, 1},
+			{"plain#Section", "plain", "Section", "", 0, 0, false, 1}, {"plain#Section|display", "plain", "Section", "display", 0, 0, false, 1},
+			{"plain", "plain", "", "", 0, 0, true, 1}, {"plain|display", "plain", "", "display", 0, 0, true, 1},
+			{"plain#Section", "plain", "Section", "", 0, 0, true, 1}, {"plain#Section|display", "plain", "Section", "display", 0, 0, true, 1},
 		}},
-		{"fences", "```md\n[[no]]\n~~~\n[[no]]\n```\n~~~md\n[[no]]\n~~~\n[[yes]]", []LinkRef{{"yes", "yes", "", "", false, 9}}},
-		{"inline", "`[[no]]` ``a ` ![[no]]`` [[yes]]", []LinkRef{{"yes", "yes", "", "", false, 1}}},
-		{"multiline inline", "`start\n[[no]]`\n[[yes]]", []LinkRef{{"yes", "yes", "", "", false, 3}}},
-		{"unmatched tick", "` [[yes]]", []LinkRef{{"yes", "yes", "", "", false, 1}}},
+		{"fences", "```md\n[[no]]\n~~~\n[[no]]\n```\n~~~md\n[[no]]\n~~~\n[[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 9}}},
+		{"inline", "`[[no]]` ``a ` ![[no]]`` [[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 1}}},
+		{"multiline inline", "`start\n[[no]]`\n[[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 3}}},
+		{"unmatched tick", "` [[yes]]", []LinkRef{{"yes", "yes", "", "", 0, 0, false, 1}}},
 		{"empty", "[[]] [[ |alias]] [[#heading]] [[unfinished", []LinkRef{}},
-		{"lines", "first\n![[a]] and [[b]]\n", []LinkRef{{"a", "a", "", "", true, 2}, {"b", "b", "", "", false, 2}}},
+		{"lines", "first\n![[a]] and [[b]]\n", []LinkRef{{"a", "a", "", "", 0, 0, true, 2}, {"b", "b", "", "", 0, 0, false, 2}}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractLinks(tt.body); !reflect.DeepEqual(got, tt.want) {
+			got := ExtractLinks(tt.body)
+			for i := range got {
+				if tt.body[got[i].Start:got[i].End] != got[i].Raw {
+					t.Fatal("invalid span")
+				}
+				got[i].Start, got[i].End = 0, 0
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("got %+v, want %+v", got, tt.want)
 			}
 		})

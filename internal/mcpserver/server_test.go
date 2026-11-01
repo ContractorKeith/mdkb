@@ -18,6 +18,11 @@ import (
 func fixture(t *testing.T) string {
 	t.Helper()
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	t.Setenv("MDKB_COMMIT_ON_WRITE", "1")
 	root := t.TempDir()
 	if err := kb.Init(root); err != nil {
 		t.Fatal(err)

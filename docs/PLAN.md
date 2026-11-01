@@ -1,6 +1,6 @@
 # mdkb — Build Plan
 
-Status: planned, no code yet (2026-11-01). Written after reading
+Status: M0–M4 implemented (2026-11-01); M5–M6 remain. Written after reading
 [devjarus/personal-knowledge-base](https://github.com/devjarus/personal-knowledge-base),
 [ILDaviz/lyra-tui](https://github.com/ILDaviz/lyra-tui) (archived 2026-10-13) and
 [sazardev/shiki](https://github.com/sazardev/shiki).
@@ -53,8 +53,8 @@ This keeps 1,454 real notes out of the blast radius while the tool is young.
 | 9 | MCP stdio server, read tools | v1 | M3 | `list_notes`, `read_note`, `search_notes`, `get_links`, `get_backlinks`, `get_info` |
 | 10 | MCP write tools behind `--allow-write` | v1 | M3 | `write_note` (mode: create, append, overwrite), `capture` |
 | 11 | `new`, `capture` (to `00-Inbox/`), `daily` | v1 | M4 | `--body`, `--stdin`, `--tags`, `--dry-run` |
-| 12 | `mv` rewrites inbound links | v1 | M4 | `--dry-run` shows the diff |
-| 13 | Git commit per write when KB is a repo | v1 | M4 | `commit_on_write` config, default on |
+| 12 | `mv` rewrites inbound links | v1 | M4 | `--dry-run` shows unified diffs; preserves unambiguous basenames |
+| 13 | Git commit per write when KB is a repo | v1 | M4 | `[write] commit_on_write`, default on; `MDKB_COMMIT_ON_WRITE=0/1` |
 | 14 | Embeddings via Ollama, `embed`, hybrid search | v1 | M5 | Reciprocal rank fusion, not fixed weights; brute-force cosine is fine under ~20k notes |
 | 15 | Cross-compile macOS/Linux, Homebrew tap, `v0.1.0` | v1 | M6 | Windows later |
 | 16 | `import obsidian <vault> [--dry-run]` | Later | | After v1 proves link semantics on fixtures |
@@ -135,7 +135,7 @@ Each milestone is one GitHub issue, one branch, one PR, one T3 thread in its own
 | M1 | Index and keyword search | Rows 2–6 pass §8 on the fixture |
 | M2 | Links | Rows 7–8; every fixture link shape resolves or reports broken |
 | M3 | MCP server | Rows 9–10; Claude Code lists and calls every tool; write refused without flag |
-| M4 | Writes | Rows 11–13; `mv` on fixture leaves zero broken links; each write is one commit |
+| M4 | Writes | Rows 11–13; `mv` on fixture leaves zero new broken links; each write is one commit |
 | M5 | Semantic search | Row 14; hybrid beats keyword on a 10-query fixture set, documented |
 | M6 | Release | Row 15; `skeptic-review` findings triaged; `brew install contractorkeith/tap/mdkb` |
 
@@ -150,9 +150,9 @@ Run from a clean clone on macOS and Linux:
 3. Delete the index file, `reindex --full`, re-run step 2: identical output.
 4. `mdkb mcp` under Claude Code: `list_notes` and `search_notes` return; `write_note` returns
    an error without `--allow-write` (tool absent); with it, the note exists and is
-   reindexed. Git commits arrive in M4.
-5. `mdkb mv` on a note with three inbound links: `broken` reports zero afterward; `--dry-run`
-   changed nothing.
+   reindexed. Git commits are included from M4.
+5. `mdkb mv` on a note with inbound links: `broken` reports no new broken links afterward
+   (the fixture retains its three pre-existing broken rows); `--dry-run` changes nothing.
 6. `ls` with 60 notes returns 50 and a `truncated: true` field in JSON.
 
 ## 9. Process (the real deliverable)

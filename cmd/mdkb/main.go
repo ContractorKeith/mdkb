@@ -102,6 +102,7 @@ func newRoot() *cobra.Command {
 	addReads(cmd, &root, output)
 	addLinks(cmd, &root, output)
 	addMCP(cmd, &root)
+	addWrites(cmd, &root, output)
 	return cmd
 }
 

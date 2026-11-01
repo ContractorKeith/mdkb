@@ -5,6 +5,7 @@ import "strings"
 // LinkRef retains the spelling inside brackets and a body-relative, one-based line.
 type LinkRef struct {
 	Raw, Target, Heading, Alias string
+	Start, End                  int
 	Embed                       bool
 	Line                        int
 }
@@ -55,7 +56,7 @@ func ExtractLinks(body string) []LinkRef {
 			}
 			end += p + 2
 			raw := line[p+2 : end]
-			ref := LinkRef{Raw: raw, Embed: p > 0 && line[p-1] == '!', Line: lineNo + 1}
+			ref := LinkRef{Raw: raw, Start: lineOffset + p + 2, End: lineOffset + end, Embed: p > 0 && line[p-1] == '!', Line: lineNo + 1}
 			target, alias, _ := strings.Cut(raw, "|")
 			target, heading, _ := strings.Cut(target, "#")
 			ref.Target, ref.Heading, ref.Alias = strings.TrimSpace(target), strings.TrimSpace(heading), strings.TrimSpace(alias)
