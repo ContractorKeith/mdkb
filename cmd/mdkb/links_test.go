@@ -10,8 +10,8 @@ import (
 
 func TestLinkReportsCapAndErrors(t *testing.T) {
 	root := fixture(t)
-	for _, command := range []string{"links", "backlinks"} {
-		if out, err := run(command, "nope", "--json"); exitCode(err) != 2 || out != "" {
+	for _, command := range []string{"cat", "links", "backlinks"} {
+		if out, err := run(command, "nope", "--json"); exitCode(err) != 2 || out != "" || err.Error() != "note not found: nope" {
 			t.Fatalf("%s: %q %v", command, out, err)
 		}
 	}

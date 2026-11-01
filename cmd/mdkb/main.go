@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ContractorKeith/mdkb/internal/app"
 	"github.com/ContractorKeith/mdkb/internal/config"
 	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
@@ -91,38 +92,16 @@ func newRoot() *cobra.Command {
 	cmd.AddCommand(&cobra.Command{
 		Use: "info", Short: "Inspect the root and count Markdown notes", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, err := config.ResolveRoot(root)
+			info, err := app.Info(cmd.Context(), root)
 			if err != nil {
 				return err
-			}
-			info, err := kb.Info(path)
-			if err != nil {
-				return err
-			}
-			if info.Initialized {
-				idx, err := index.Open(path)
-				if err != nil {
-					return err
-				}
-				defer idx.Close()
-				if err := idx.Sync(cmd.Context(), path, false); err != nil {
-					return err
-				}
-				info.IndexedNotes, err = idx.Count(cmd.Context())
-				if err != nil {
-					return err
-				}
-				info.IndexPath = idx.Path
-				info.Links, info.BrokenLinks, info.Orphans, err = idx.LinkCounts(cmd.Context())
-				if err != nil {
-					return err
-				}
 			}
 			return output(cmd, info, "Root: %s\nNotes: %d\nInitialized: %t\nIndexed notes: %d\nIndex: %s\nProblems: %d\nLinks: %d\nBroken links: %d\nOrphans: %d\n", info.Root, info.NoteCount, info.Initialized, info.IndexedNotes, info.IndexPath, info.Problems, info.Links, info.BrokenLinks, info.Orphans)
 		},
 	})
 	addReads(cmd, &root, output)
 	addLinks(cmd, &root, output)
+	addMCP(cmd, &root)
 	return cmd
 }
 

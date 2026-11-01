@@ -8,7 +8,7 @@ an Obsidian vault and does not replace it. "Done" for v1 is every row marked v1 
 `docs/PLAN.md` §3 passing the acceptance checks in §8 on macOS and Linux.
 
 ## Status
-M2 done — 2026-11-01: wikilinks, backlinks, orphan and broken-link reports. M3–M6 remain.
+M3 done — 2026-11-01: MCP stdio read tools and writes behind --allow-write. M4–M6 remain.
 
 ## Commands
 ```bash
@@ -23,7 +23,7 @@ test -z "$(gofmt -l .)" && go vet ./... && staticcheck ./...
 
 ## Conventions & Gotchas
 - `internal/kb` is the only package that touches the KB folder. `cmd/` and `internal/mcpserver`
-  contain no file or SQL access.
+  contain no file or SQL access; MCP tools share auto-sync through `internal/app`.
 - `internal/index` alone imports `database/sql`; `internal/search` owns ranked `Hit` results.
 - Default KB root is `~/kb`. Never point tests or examples at `~/vault`.
 - Every read command has `--json`; every write has `--dry-run`. Keep `docs/json.md` in step.

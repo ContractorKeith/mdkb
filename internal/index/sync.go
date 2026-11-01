@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 
 	"github.com/ContractorKeith/mdkb/internal/kb"
@@ -53,22 +54,8 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 		if exists && s.mtime == n.MTime && s.size == n.Size && scanned != 0 {
 			continue
 		}
-		if err := replaceLinks(ctx, tx, n); err != nil {
+		if err := upsertNote(ctx, tx, n); err != nil {
 			return Error(err)
-		}
-		aliases, _ := json.Marshal(n.Aliases)
-		tags, _ := json.Marshal(n.Tags)
-		_, err = tx.ExecContext(ctx, `INSERT INTO notes(id,path,title,aliases,tags,created,updated,mtime,size,body,problem) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET path=excluded.path,title=excluded.title,aliases=excluded.aliases,tags=excluded.tags,created=excluded.created,updated=excluded.updated,mtime=excluded.mtime,size=excluded.size,body=excluded.body,problem=excluded.problem`, n.ID, n.Path, n.Title, string(aliases), string(tags), n.Created, n.Updated, n.MTime, n.Size, n.Body, n.Problem)
-		if err != nil {
-			return Error(err)
-		}
-		if _, err = tx.ExecContext(ctx, "DELETE FROM tags WHERE note_id=?", n.ID); err != nil {
-			return Error(err)
-		}
-		for _, tag := range n.Tags {
-			if _, err = tx.ExecContext(ctx, "INSERT OR IGNORE INTO tags(note_id,name) VALUES(?,?)", n.ID, tag); err != nil {
-				return Error(err)
-			}
 		}
 	}
 	for path := range old {
@@ -89,4 +76,49 @@ func (i *Index) Sync(ctx context.Context, root string, full bool) error {
 		return Error(err)
 	}
 	return Error(tx.Commit())
+}
+
+// SyncNote reindexes one written note and reconsiders graph resolution.
+func (i *Index) SyncNote(ctx context.Context, root, id string) error {
+	n, _, err := kb.Read(root, id)
+	if err != nil {
+		return err
+	}
+	tx, err := i.db.BeginTx(ctx, nil)
+	if err != nil {
+		return Error(err)
+	}
+	defer tx.Rollback()
+	if err := upsertNote(ctx, tx, n); err != nil {
+		return Error(err)
+	}
+	notes, err := resolutionNotesTx(ctx, tx)
+	if err != nil {
+		return Error(err)
+	}
+	if err := resolveLinks(ctx, tx, notes); err != nil {
+		return Error(err)
+	}
+	return Error(tx.Commit())
+}
+
+func upsertNote(ctx context.Context, tx *sql.Tx, n kb.Note) error {
+	if err := replaceLinks(ctx, tx, n); err != nil {
+		return err
+	}
+	aliases, _ := json.Marshal(n.Aliases)
+	tags, _ := json.Marshal(n.Tags)
+	_, err := tx.ExecContext(ctx, `INSERT INTO notes(id,path,title,aliases,tags,created,updated,mtime,size,body,problem) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET path=excluded.path,title=excluded.title,aliases=excluded.aliases,tags=excluded.tags,created=excluded.created,updated=excluded.updated,mtime=excluded.mtime,size=excluded.size,body=excluded.body,problem=excluded.problem`, n.ID, n.Path, n.Title, string(aliases), string(tags), n.Created, n.Updated, n.MTime, n.Size, n.Body, n.Problem)
+	if err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, "DELETE FROM tags WHERE note_id=?", n.ID); err != nil {
+		return err
+	}
+	for _, tag := range n.Tags {
+		if _, err = tx.ExecContext(ctx, "INSERT OR IGNORE INTO tags(note_id,name) VALUES(?,?)", n.ID, tag); err != nil {
+			return err
+		}
+	}
+	return nil
 }

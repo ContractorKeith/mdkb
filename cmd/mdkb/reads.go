@@ -1,39 +1,22 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/ContractorKeith/mdkb/internal/config"
+	"github.com/ContractorKeith/mdkb/internal/app"
 	"github.com/ContractorKeith/mdkb/internal/index"
 	"github.com/ContractorKeith/mdkb/internal/kb"
 	"github.com/ContractorKeith/mdkb/internal/search"
 	"github.com/spf13/cobra"
 )
 
-var errUninitialized = errors.New("KB not initialized")
+var errUninitialized = app.ErrUninitialized
 
 type outputFunc func(*cobra.Command, any, string, ...any) error
 
 func synced(cmd *cobra.Command, root string, full bool) (*index.Index, string, error) {
-	path, err := config.ResolveRoot(root)
-	if err != nil {
-		return nil, "", err
-	}
-	info, err := kb.Info(path)
-	if err != nil || !info.Initialized {
-		return nil, "", fmt.Errorf("%w: %s", errUninitialized, path)
-	}
-	idx, err := index.Open(path)
-	if err != nil {
-		return nil, "", err
-	}
-	if err := idx.Sync(cmd.Context(), path, full); err != nil {
-		idx.Close()
-		return nil, "", err
-	}
-	return idx, path, nil
+	return app.Synced(cmd.Context(), root, full)
 }
 
 func addReads(cmd *cobra.Command, root *string, output outputFunc) {
@@ -95,7 +78,8 @@ func addReads(cmd *cobra.Command, root *string, output outputFunc) {
 			Tags    []string `json:"tags"`
 			Aliases []string `json:"aliases"`
 			Body    string   `json:"body"`
-		}{n.ID, n.Title, n.Tags, n.Aliases, n.Body}
+			Problem string   `json:"problem,omitempty"`
+		}{n.ID, n.Title, n.Tags, n.Aliases, n.Body, n.Problem}
 		return output(cmd, result, "%s", raw)
 	}})
 	var searchLimit int

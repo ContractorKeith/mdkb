@@ -2,34 +2,34 @@ package index
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
-	"os"
 
 	"github.com/ContractorKeith/mdkb/internal/kb"
 )
 
 type Link struct {
-	Target   string  `json:"target"`
-	TargetID *string `json:"target_id"`
-	Heading  string  `json:"heading"`
-	Alias    string  `json:"alias"`
-	Embed    bool    `json:"embed"`
-	Line     int     `json:"line"`
-	Resolved bool    `json:"resolved"`
+	Target   string  `json:"target" jsonschema:"target"`
+	TargetID *string `json:"target_id" jsonschema:"target id"`
+	Heading  string  `json:"heading" jsonschema:"heading"`
+	Alias    string  `json:"alias" jsonschema:"alias"`
+	Embed    bool    `json:"embed" jsonschema:"embed"`
+	Line     int     `json:"line" jsonschema:"line"`
+	Resolved bool    `json:"resolved" jsonschema:"resolved"`
 }
 type Outgoing struct {
-	ID    string `json:"id"`
-	Links []Link `json:"links"`
+	ID    string `json:"id" jsonschema:"id"`
+	Links []Link `json:"links" jsonschema:"links"`
 }
 type Backlink struct {
-	From  string `json:"from"`
-	Line  int    `json:"line"`
-	Alias string `json:"alias"`
-	Embed bool   `json:"embed"`
+	From  string `json:"from" jsonschema:"from"`
+	Line  int    `json:"line" jsonschema:"line"`
+	Alias string `json:"alias" jsonschema:"alias"`
+	Embed bool   `json:"embed" jsonschema:"embed"`
 }
 type Incoming struct {
-	ID        string     `json:"id"`
-	Backlinks []Backlink `json:"backlinks"`
+	ID        string     `json:"id" jsonschema:"id"`
+	Backlinks []Backlink `json:"backlinks" jsonschema:"backlinks"`
 }
 
 func (i *Index) requireID(ctx context.Context, id string) error {
@@ -38,7 +38,7 @@ func (i *Index) requireID(ctx context.Context, id string) error {
 		return Error(err)
 	}
 	if count == 0 {
-		return os.ErrNotExist
+		return kb.NoteNotFound(id)
 	}
 	return nil
 }
@@ -82,13 +82,13 @@ func (i *Index) Backlinks(ctx context.Context, id string) (Incoming, error) {
 }
 
 type Orphan struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
+	ID    string `json:"id" jsonschema:"id"`
+	Title string `json:"title" jsonschema:"title"`
 }
 type Orphans struct {
-	Orphans   []Orphan `json:"orphans"`
-	Total     int      `json:"total"`
-	Truncated bool     `json:"truncated"`
+	Orphans   []Orphan `json:"orphans" jsonschema:"orphans"`
+	Total     int      `json:"total" jsonschema:"total"`
+	Truncated bool     `json:"truncated" jsonschema:"truncated"`
 }
 
 func (i *Index) Orphans(ctx context.Context) (Orphans, error) {
@@ -114,15 +114,15 @@ func (i *Index) Orphans(ctx context.Context) (Orphans, error) {
 }
 
 type BrokenLink struct {
-	From   string `json:"from"`
-	Target string `json:"target"`
-	Line   int    `json:"line"`
-	Reason string `json:"reason"`
+	From   string `json:"from" jsonschema:"from"`
+	Target string `json:"target" jsonschema:"target"`
+	Line   int    `json:"line" jsonschema:"line"`
+	Reason string `json:"reason" jsonschema:"reason"`
 }
 type Broken struct {
-	Broken    []BrokenLink `json:"broken"`
-	Total     int          `json:"total"`
-	Truncated bool         `json:"truncated"`
+	Broken    []BrokenLink `json:"broken" jsonschema:"broken"`
+	Total     int          `json:"total" jsonschema:"total"`
+	Truncated bool         `json:"truncated" jsonschema:"truncated"`
 }
 
 func (i *Index) Broken(ctx context.Context) (Broken, error) {
@@ -152,7 +152,13 @@ func (i *Index) Broken(ctx context.Context) (Broken, error) {
 }
 
 func (i *Index) resolutionNotes(ctx context.Context) ([]kb.Note, error) {
-	rows, err := i.db.QueryContext(ctx, "SELECT id,aliases FROM notes ORDER BY id")
+	return resolutionNotesTx(ctx, i.db)
+}
+
+func resolutionNotesTx(ctx context.Context, q interface {
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+}) ([]kb.Note, error) {
+	rows, err := q.QueryContext(ctx, "SELECT id,aliases FROM notes ORDER BY id")
 	if err != nil {
 		return nil, Error(err)
 	}

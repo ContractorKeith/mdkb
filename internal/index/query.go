@@ -7,19 +7,19 @@ import (
 )
 
 type Summary struct {
-	Problem string   `json:"problem,omitempty"`
-	ID      string   `json:"id"`
-	Title   string   `json:"title"`
-	Tags    []string `json:"tags"`
+	Problem string   `json:"problem,omitempty" jsonschema:"problem"`
+	ID      string   `json:"id" jsonschema:"id"`
+	Title   string   `json:"title" jsonschema:"title"`
+	Tags    []string `json:"tags" jsonschema:"tags"`
 }
 type Listing struct {
-	Notes     []Summary `json:"notes"`
-	Total     int       `json:"total"`
-	Truncated bool      `json:"truncated"`
+	Notes     []Summary `json:"notes" jsonschema:"notes"`
+	Total     int       `json:"total" jsonschema:"total"`
+	Truncated bool      `json:"truncated" jsonschema:"truncated"`
 }
 type Tag struct {
-	Name  string `json:"name"`
-	Count int    `json:"count"`
+	Name  string `json:"name" jsonschema:"name"`
+	Count int    `json:"count" jsonschema:"count"`
 }
 
 func (i *Index) List(ctx context.Context, tag string, limit int) (Listing, error) {
