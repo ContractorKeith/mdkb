@@ -29,7 +29,12 @@ func Synced(ctx context.Context, root string, full bool) (*index.Index, string, 
 		return nil, "", err
 	}
 	defer release()
-	idx, err := index.Open(path)
+	var idx *index.Index
+	if full {
+		idx, err = index.OpenForReindex(path)
+	} else {
+		idx, err = index.Open(path)
+	}
 	if err != nil {
 		return nil, "", err
 	}
@@ -55,8 +60,16 @@ func Info(ctx context.Context, root string) (kb.Details, error) {
 	if err != nil || !info.Initialized {
 		return info, err
 	}
+	info.IndexPath, err = index.CachePath(path)
+	if err != nil {
+		return info, err
+	}
 	idx, _, err := Synced(ctx, path, false)
 	if err != nil {
+		if index.IsUnreadable(err) {
+			info.Problem = map[string]string{"index": "unreadable"}
+			return info, nil
+		}
 		return info, err
 	}
 	defer idx.Close()

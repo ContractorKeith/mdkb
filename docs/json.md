@@ -12,7 +12,10 @@ Successful --json output is one object and a newline on stdout:
   Counts regular *.md files recursively, excluding dot-directories and child symlinks; a symlink root is supported.
   An existing directory without the marker returns initialized:false with exit 0;
   uninitialized info is an inspector and never creates files (`indexed_notes:0`,
-  `index_path:""`). Initialized info synchronizes the index. A missing root exits 2.
+  `index_path:""`). Initialized info synchronizes the index. If the cache is unreadable, it still
+  returns `index_path`, `indexed_notes:0` and `problem:{"index":"unreadable"}`.
+  Run `mdkb reindex --full` to discard the corrupt cache and SQLite sidecars.
+  Cache paths hash the symlink-resolved root. A missing root exits 2.
 - init [path]: {"root":"/absolute/path","dry_run":false}.
   --dry-run validates without writing and returns dry_run:true. This shape does
   not assert that a dry run has initialized the directory.

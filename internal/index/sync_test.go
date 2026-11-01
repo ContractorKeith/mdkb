@@ -29,7 +29,11 @@ func TestIncrementalSync(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer idx.Close()
-	hash := sha256.Sum256([]byte(root))
+	physicalRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash := sha256.Sum256([]byte(physicalRoot))
 	if idx.Path != filepath.Join(cache, "mdkb", fmt.Sprintf("%x.db", hash[:8])) {
 		t.Fatal(idx.Path)
 	}
